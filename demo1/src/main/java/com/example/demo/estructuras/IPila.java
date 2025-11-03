@@ -1,4 +1,4 @@
-package estructuras;
+package com.example.demo.estructuras;
 
 /**
  * Interfaz para la estructura de datos Pila (Stack) - LIFO

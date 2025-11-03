@@ -1,4 +1,4 @@
-package estructuras;
+package com.example.demo.estructuras;
 
 /**
  * Interfaz base para todas las estructuras de tipo Lista

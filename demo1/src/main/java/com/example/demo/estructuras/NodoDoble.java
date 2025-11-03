@@ -1,4 +1,4 @@
-package estructuras;
+package com.example.demo.estructuras;
 
 /**
  * Nodo doble para listas doblemente enlazadas

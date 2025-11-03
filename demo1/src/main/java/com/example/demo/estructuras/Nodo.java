@@ -1,4 +1,4 @@
-package estructuras;
+package com.example.demo.estructuras;
 
 /**
  * Nodo simple para listas enlazadas y pilas

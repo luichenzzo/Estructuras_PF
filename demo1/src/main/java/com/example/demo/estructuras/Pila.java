@@ -1,4 +1,4 @@
-package estructuras;
+package com.example.demo.estructuras;
 
 import java.util.EmptyStackException;
 import java.util.Iterator;
