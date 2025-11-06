@@ -7,6 +7,8 @@ import com.example.demo.estructuras.ListaDoblementeEnlazada;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+
 @Service
 public class ArtistaService {
 
@@ -23,6 +25,11 @@ public class ArtistaService {
         artista.setAlbumes(new ListaDoblementeEnlazada<>());
 
         return artistaRepository.save(artista);
+    }
+
+    public ArrayList<Artista> obtenerArtistas() {
+
+        return (ArrayList<Artista>) artistaRepository.findAll();
     }
 }
 

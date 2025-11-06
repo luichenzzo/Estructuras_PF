@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/usuarios")
 public class UsuarioController {
@@ -22,6 +24,22 @@ public class UsuarioController {
         try {
             Usuario usuarioGuardado = usuarioService.guardarUsuario(nombre, correo, contrasena);
             return new ResponseEntity<>(usuarioGuardado, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    @GetMapping
+    public ResponseEntity<Usuario> obtenerUsuarioPorCorreo(@RequestParam String correo) {
+        try {
+            Optional<Usuario> usuarioOpt = usuarioService.obtenerUsuarioPorCorreo(correo);
+            Usuario usuario = usuarioOpt.orElse(null);
+            if (usuario != null) {
+                return new ResponseEntity<>(usuario, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }

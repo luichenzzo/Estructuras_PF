@@ -8,8 +8,10 @@ import com.example.demo.repositorio.AlbumRepository;
 import com.example.demo.repositorio.ArtistaRepository;
 import com.example.demo.estructuras.ListaEnlazada;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -80,4 +82,24 @@ public class AlbumService {
 
         return albumGuardado;
     }
+
+    public List<Album> obtenerAlbumes() {
+        return albumRepository.findAll();
+
+    }
+
+    // java
+    public Optional<Album> obtenerAlbumPorNombre(String nombre) {
+        if (nombre == null || nombre.trim().isEmpty()) {
+            return Optional.empty();
+        }
+
+        List<Album> resultados = albumRepository.findByTituloContainingIgnoreCase(nombre.trim());
+        if (resultados == null || resultados.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(resultados.get(0));
+    }
+
+
 }

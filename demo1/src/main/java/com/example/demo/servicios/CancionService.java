@@ -109,5 +109,10 @@ public class CancionService {
 
         return cancionGuardada;
     }
+
+    public List<Cancion> obtenerCanciones() {
+
+        return cancionRepository.findAll();
+    }
 }
 

@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/canciones")
 public class CancionController {
@@ -40,6 +42,11 @@ public class CancionController {
         } catch (Exception e) {
             return new ResponseEntity<>("Error interno del servidor", HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @GetMapping
+    public List<Cancion> obtenerCanciones() {
+        return cancionService.obtenerCanciones();
     }
 }
 

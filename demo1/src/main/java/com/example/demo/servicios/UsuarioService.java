@@ -7,6 +7,8 @@ import com.example.demo.estructuras.ListaEnlazada;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class UsuarioService {
 
@@ -23,5 +25,9 @@ public class UsuarioService {
         usuario.setColaReproduccion(new Cola<>());
 
         return usuarioRepository.save(usuario);
+    }
+
+    public Optional<Usuario> obtenerUsuarioPorCorreo(String usuario) {
+        return usuarioRepository.findByUsuario(usuario);
     }
 }
