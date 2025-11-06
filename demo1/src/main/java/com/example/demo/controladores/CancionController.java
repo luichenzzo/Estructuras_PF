@@ -20,33 +20,21 @@ public class CancionController {
 
     // Endpoint 1: Recibe IDs del artista y álbum
     @PostMapping
-    public ResponseEntity<?> guardarCancion(@RequestBody CancionRegistroDTO cancionDTO) {
-        try {
-            Cancion cancionGuardada = cancionService.guardarCancion(cancionDTO);
-            return new ResponseEntity<>(cancionGuardada, HttpStatus.CREATED);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Error interno del servidor", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Cancion> guardarCancion(@RequestBody CancionRegistroDTO cancionDTO) {
+        Cancion cancionGuardada = cancionService.guardarCancion(cancionDTO);
+        return new ResponseEntity<>(cancionGuardada, HttpStatus.CREATED);
     }
 
     // Endpoint 2: Recibe NOMBRES del artista y título del álbum (más lógico para el front)
     @PostMapping("/por-nombres")
-    public ResponseEntity<?> guardarCancionPorNombres(@RequestBody CancionRegistroPorNombreDTO cancionDTO) {
-        try {
-            Cancion cancionGuardada = cancionService.guardarCancionPorNombres(cancionDTO);
-            return new ResponseEntity<>(cancionGuardada, HttpStatus.CREATED);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Error interno del servidor", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<Cancion> guardarCancionPorNombres(@RequestBody CancionRegistroPorNombreDTO cancionDTO) {
+        Cancion cancionGuardada = cancionService.guardarCancionPorNombres(cancionDTO);
+        return new ResponseEntity<>(cancionGuardada, HttpStatus.CREATED);
     }
 
     @GetMapping
-    public List<Cancion> obtenerCanciones() {
-        return cancionService.obtenerCanciones();
+    public ResponseEntity<List<Cancion>> obtenerCanciones() {
+        List<Cancion> canciones = cancionService.obtenerCanciones();
+        return new ResponseEntity<>(canciones, HttpStatus.OK);
     }
 }
-

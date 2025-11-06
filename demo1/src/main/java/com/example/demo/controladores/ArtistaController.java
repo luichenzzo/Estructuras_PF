@@ -19,18 +19,13 @@ public class ArtistaController {
 
     @PostMapping
     public ResponseEntity<Artista> guardarArtista(@RequestBody ArtistaRegistroDTO artistaDTO) {
-        try {
-            Artista artistaGuardado = artistaService.guardarArtista(artistaDTO);
-            return new ResponseEntity<>(artistaGuardado, HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        Artista artistaGuardado = artistaService.guardarArtista(artistaDTO);
+        return new ResponseEntity<>(artistaGuardado, HttpStatus.CREATED);
     }
-
 
     @GetMapping
-    public ArrayList<Artista> obtenerArtistas() {
-        return artistaService.obtenerArtistas();
+    public ResponseEntity<ArrayList<Artista>> obtenerArtistas() {
+        ArrayList<Artista> artistas = artistaService.obtenerArtistas();
+        return new ResponseEntity<>(artistas, HttpStatus.OK);
     }
 }
-

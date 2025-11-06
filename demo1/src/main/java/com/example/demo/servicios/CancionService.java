@@ -8,6 +8,9 @@ import com.example.demo.modelo.Cancion;
 import com.example.demo.repositorio.AlbumRepository;
 import com.example.demo.repositorio.ArtistaRepository;
 import com.example.demo.repositorio.CancionRepository;
+import com.example.demo.excepciones.ArtistaNoEncontradoException;
+import com.example.demo.excepciones.AlbumNoEncontradoException;
+import com.example.demo.excepciones.DatosInvalidosException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,16 +31,21 @@ public class CancionService {
 
     // Método 1: Guardar canción usando IDs
     public Cancion guardarCancion(CancionRegistroDTO cancionDTO) {
+        // Validar datos
+        if (cancionDTO.getTitulo() == null || cancionDTO.getTitulo().trim().isEmpty()) {
+            throw new DatosInvalidosException("El título de la canción es obligatorio");
+        }
+
         // Buscar el artista por ID
         Optional<Artista> artistaOpt = artistaRepository.findById(cancionDTO.getArtistaId());
         if (artistaOpt.isEmpty()) {
-            throw new RuntimeException("Artista no encontrado con ID: " + cancionDTO.getArtistaId());
+            throw new ArtistaNoEncontradoException(cancionDTO.getArtistaId());
         }
 
         // Buscar el álbum por ID
         Optional<Album> albumOpt = albumRepository.findById(cancionDTO.getAlbumId());
         if (albumOpt.isEmpty()) {
-            throw new RuntimeException("Álbum no encontrado con ID: " + cancionDTO.getAlbumId());
+            throw new AlbumNoEncontradoException(cancionDTO.getAlbumId());
         }
 
         Artista artista = artistaOpt.get();
@@ -67,10 +75,21 @@ public class CancionService {
 
     // Método 2: Guardar canción usando NOMBRES (más lógico para el front)
     public Cancion guardarCancionPorNombres(CancionRegistroPorNombreDTO cancionDTO) {
+        // Validar datos
+        if (cancionDTO.getTitulo() == null || cancionDTO.getTitulo().trim().isEmpty()) {
+            throw new DatosInvalidosException("El título de la canción es obligatorio");
+        }
+        if (cancionDTO.getNombreArtista() == null || cancionDTO.getNombreArtista().trim().isEmpty()) {
+            throw new DatosInvalidosException("El nombre del artista es obligatorio");
+        }
+        if (cancionDTO.getTituloAlbum() == null || cancionDTO.getTituloAlbum().trim().isEmpty()) {
+            throw new DatosInvalidosException("El título del álbum es obligatorio");
+        }
+
         // Buscar el artista por nombre
         Optional<Artista> artistaOpt = artistaRepository.findByNombre(cancionDTO.getNombreArtista());
         if (artistaOpt.isEmpty()) {
-            throw new RuntimeException("Artista no encontrado con nombre: " + cancionDTO.getNombreArtista());
+            throw new ArtistaNoEncontradoException(cancionDTO.getNombreArtista());
         }
 
         Artista artista = artistaOpt.get();
@@ -82,8 +101,7 @@ public class CancionService {
                 .findFirst();
 
         if (albumOpt.isEmpty()) {
-            throw new RuntimeException("Álbum no encontrado con título: " + cancionDTO.getTituloAlbum() 
-                    + " para el artista: " + cancionDTO.getNombreArtista());
+            throw new AlbumNoEncontradoException(cancionDTO.getTituloAlbum(), cancionDTO.getNombreArtista());
         }
 
         Album album = albumOpt.get();
@@ -115,4 +133,3 @@ public class CancionService {
         return cancionRepository.findAll();
     }
 }
-

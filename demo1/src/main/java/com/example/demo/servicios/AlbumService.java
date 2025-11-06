@@ -7,6 +7,9 @@ import com.example.demo.modelo.Artista;
 import com.example.demo.repositorio.AlbumRepository;
 import com.example.demo.repositorio.ArtistaRepository;
 import com.example.demo.estructuras.ListaEnlazada;
+import com.example.demo.excepciones.ArtistaNoEncontradoException;
+import com.example.demo.excepciones.AlbumNoEncontradoException;
+import com.example.demo.excepciones.DatosInvalidosException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -25,11 +28,16 @@ public class AlbumService {
 
     // Método original: guardar álbum usando el ID del artista
     public Album guardarAlbum(AlbumRegistroDTO albumDTO) {
+        // Validar datos
+        if (albumDTO.getTitulo() == null || albumDTO.getTitulo().trim().isEmpty()) {
+            throw new DatosInvalidosException("El título del álbum es obligatorio");
+        }
+
         // Buscar el artista por ID
         Optional<Artista> artistaOpt = artistaRepository.findById(albumDTO.getArtistaId());
 
         if (artistaOpt.isEmpty()) {
-            throw new RuntimeException("Artista no encontrado con ID: " + albumDTO.getArtistaId());
+            throw new ArtistaNoEncontradoException(albumDTO.getArtistaId());
         }
 
         Artista artista = artistaOpt.get();
@@ -55,11 +63,19 @@ public class AlbumService {
 
     // Nuevo método: guardar álbum usando el NOMBRE del artista (más lógico para el front)
     public Album guardarAlbumPorNombreArtista(AlbumRegistroPorNombreDTO albumDTO) {
+        // Validar datos
+        if (albumDTO.getTitulo() == null || albumDTO.getTitulo().trim().isEmpty()) {
+            throw new DatosInvalidosException("El título del álbum es obligatorio");
+        }
+        if (albumDTO.getNombreArtista() == null || albumDTO.getNombreArtista().trim().isEmpty()) {
+            throw new DatosInvalidosException("El nombre del artista es obligatorio");
+        }
+
         // Buscar el artista por nombre
         Optional<Artista> artistaOpt = artistaRepository.findByNombre(albumDTO.getNombreArtista());
 
         if (artistaOpt.isEmpty()) {
-            throw new RuntimeException("Artista no encontrado con nombre: " + albumDTO.getNombreArtista());
+            throw new ArtistaNoEncontradoException(albumDTO.getNombreArtista());
         }
 
         Artista artista = artistaOpt.get();
@@ -91,15 +107,13 @@ public class AlbumService {
     // java
     public Optional<Album> obtenerAlbumPorNombre(String nombre) {
         if (nombre == null || nombre.trim().isEmpty()) {
-            return Optional.empty();
+            throw new DatosInvalidosException("El nombre del álbum no puede estar vacío");
         }
 
         List<Album> resultados = albumRepository.findByTituloContainingIgnoreCase(nombre.trim());
         if (resultados == null || resultados.isEmpty()) {
-            return Optional.empty();
+            throw new AlbumNoEncontradoException(nombre);
         }
         return Optional.of(resultados.get(0));
     }
-
-
 }

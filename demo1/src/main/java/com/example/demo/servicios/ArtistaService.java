@@ -4,10 +4,13 @@ import com.example.demo.dto.ArtistaRegistroDTO;
 import com.example.demo.modelo.Artista;
 import com.example.demo.repositorio.ArtistaRepository;
 import com.example.demo.estructuras.ListaDoblementeEnlazada;
+import com.example.demo.excepciones.DatosInvalidosException;
+import com.example.demo.excepciones.RecursoDuplicadoException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 @Service
 public class ArtistaService {
@@ -16,6 +19,17 @@ public class ArtistaService {
     private ArtistaRepository artistaRepository;
 
     public Artista guardarArtista(ArtistaRegistroDTO artistaDTO) {
+        // Validar datos
+        if (artistaDTO.getNombre() == null || artistaDTO.getNombre().trim().isEmpty()) {
+            throw new DatosInvalidosException("El nombre del artista es obligatorio");
+        }
+
+        // Verificar si el artista ya existe
+        Optional<Artista> artistaExistente = artistaRepository.findByNombre(artistaDTO.getNombre());
+        if (artistaExistente.isPresent()) {
+            throw new RecursoDuplicadoException("Ya existe un artista con el nombre: " + artistaDTO.getNombre());
+        }
+
         Artista artista = new Artista();
         artista.setNombre(artistaDTO.getNombre());
         artista.setNacionalidad(artistaDTO.getNacionalidad());
@@ -32,4 +46,3 @@ public class ArtistaService {
         return (ArrayList<Artista>) artistaRepository.findAll();
     }
 }
-
