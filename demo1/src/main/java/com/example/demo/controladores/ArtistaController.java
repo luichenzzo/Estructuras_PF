@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/artistas")
@@ -27,5 +28,10 @@ public class ArtistaController {
     public ResponseEntity<ArrayList<Artista>> obtenerArtistas() {
         ArrayList<Artista> artistas = artistaService.obtenerArtistas();
         return new ResponseEntity<>(artistas, HttpStatus.OK);
+    }
+
+    @GetMapping("/nombres")
+    public ResponseEntity<List<String>> obtenerNombresArtistas() {
+        return artistaService.obtenerNombresArtistas();
     }
 }

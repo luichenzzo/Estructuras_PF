@@ -7,9 +7,11 @@ import com.example.demo.estructuras.ListaDoblementeEnlazada;
 import com.example.demo.excepciones.DatosInvalidosException;
 import com.example.demo.excepciones.RecursoDuplicadoException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -44,5 +46,16 @@ public class ArtistaService {
     public ArrayList<Artista> obtenerArtistas() {
 
         return (ArrayList<Artista>) artistaRepository.findAll();
+    }
+
+    public ResponseEntity<List<String>> obtenerNombresArtistas() {
+        List<Artista> artistas = artistaRepository.findAll();
+        List<String> nombres = new ArrayList<>();
+
+        for (Artista artista : artistas) {
+            nombres.add(artista.getNombre());
+        }
+
+        return ResponseEntity.ok(nombres);
     }
 }

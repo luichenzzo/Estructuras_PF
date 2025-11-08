@@ -61,7 +61,7 @@ public class AlbumService {
         return albumGuardado;
     }
 
-    // Nuevo método: guardar álbum usando el NOMBRE del artista (más lógico para el front)
+    // Nuevo método: guardar álbum usando el NOMBRE del artista
     public Album guardarAlbumPorNombreArtista(AlbumRegistroPorNombreDTO albumDTO) {
         // Validar datos
         if (albumDTO.getTitulo() == null || albumDTO.getTitulo().trim().isEmpty()) {
