@@ -30,4 +30,6 @@ public class UsuarioController {
         Optional<Usuario> usuarioOpt = usuarioService.obtenerUsuarioPorCorreo(correo);
         return new ResponseEntity<>(usuarioOpt.get(), HttpStatus.OK);
     }
+
+
 }
