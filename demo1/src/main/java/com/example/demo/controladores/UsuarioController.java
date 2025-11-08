@@ -43,5 +43,11 @@ public class UsuarioController {
 
     }
 
+    @GetMapping("/dislike")
+    public ResponseEntity<List<Cancion>> dislikearCancion (@RequestParam String nombreUsuario, @RequestParam String tituloCancion) {
+        System.out.println("Dislike request received for user: " + nombreUsuario + " and song: " + tituloCancion);
+        List<Cancion> canciones = usuarioService.dislikearCancion(nombreUsuario, tituloCancion);
+        return new ResponseEntity<>(canciones, HttpStatus.OK);
 
+    }
 }

@@ -2,9 +2,9 @@ package com.example.demo.modelo;
 
 import com.example.demo.estructuras.Cola;
 import com.example.demo.estructuras.ListaEnlazada;
+import com.example.demo.estructuras.ListaRedonda;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -24,5 +24,7 @@ public class Usuario {
     private ListaEnlazada<Cancion> listaFavoritos;
     private ListaEnlazada<Playlist> listasDeReproduccion;
     private Cola<Cancion> colaReproduccion;
+    private ListaRedonda<Usuario> seguidores;
+    private ListaRedonda<Usuario> seguidos;
 
 }
