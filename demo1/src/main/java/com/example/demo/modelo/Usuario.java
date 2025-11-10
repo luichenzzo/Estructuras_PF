@@ -18,7 +18,7 @@ public class Usuario {
 
     @Id
     private String id;
-    private String usuario;
+    private String correo;
     private String contrasena;
     private String nombre;
     private ListaEnlazada<Cancion> listaFavoritos;

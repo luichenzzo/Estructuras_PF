@@ -40,25 +40,25 @@ public class UsuarioController {
     //Este metodo espera el correo, no el nombre de usuario
     //TODO: Maybe tendría mas sentido si recibe el nombre o el ID
     @GetMapping("/like")
-    public ResponseEntity<List<Cancion>> likearCancion (@RequestParam String nombreUsuario, @RequestParam String tituloCancion) {
-        List<Cancion> canciones = usuarioService.likearCancion(nombreUsuario, tituloCancion);
+    public ResponseEntity<List<Cancion>> likearCancion (@RequestParam String correoUsuario, @RequestParam String tituloCancion) {
+        List<Cancion> canciones = usuarioService.likearCancion(correoUsuario, tituloCancion);
         return new ResponseEntity<>(canciones, HttpStatus.OK);
 
     }
 
     // Endpoint para quitar like (dislike) reutilizando la lógica del servicio
     @GetMapping("/dislike")
-    public ResponseEntity<List<Cancion>> dislikearCancion (@RequestParam String nombreUsuario, @RequestParam String tituloCancion) {
-        List<Cancion> canciones = usuarioService.dislikearCancion(nombreUsuario, tituloCancion);
+    public ResponseEntity<List<Cancion>> dislikearCancion (@RequestParam String correoUsuario, @RequestParam String tituloCancion) {
+        List<Cancion> canciones = usuarioService.dislikearCancion(correoUsuario, tituloCancion);
         return new ResponseEntity<>(canciones, HttpStatus.OK);
     }
 
     @GetMapping("/seguir")
-    public ResponseEntity<Void> seguirUsuario (@RequestParam String nombreUsuario, @RequestParam String usuarioSeguir){
+    public ResponseEntity<Void> seguirUsuario (@RequestParam String correoUsuario, @RequestParam String correoSeguir){
         try {
             // Call the service which performs the follow operation. We ignore the returned list
             // and respond with a simple OK on success.
-            usuarioService.seguirUsuario(nombreUsuario, usuarioSeguir);
+            usuarioService.seguirUsuario(correoUsuario, correoSeguir);
             return ResponseEntity.ok().build();
         } catch (RuntimeException ex) {
             // Map service/runtime errors to 401 UNAUTHORIZED as requested.
@@ -69,13 +69,19 @@ public class UsuarioController {
 
 
     @GetMapping("/unseguir")
-    public ResponseEntity<Void> unseguirUsuario (@RequestParam String nombreUsuario, @RequestParam String usuarioUnseguir){
+    public ResponseEntity<Void> unseguirUsuario (@RequestParam String correoUsuario, @RequestParam String correoUnseguir){
         try {
-            usuarioService.unseguirUsuario(nombreUsuario, usuarioUnseguir);
+            usuarioService.unseguirUsuario(correoUsuario, correoUnseguir);
             return ResponseEntity.ok().build();
         } catch (RuntimeException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+    }
+
+    @GetMapping("/seguidores")
+    public ResponseEntity<List<Usuario>> obtenerSeguidores (@RequestParam String correoUsuario){
+        List<Usuario> seguidores = usuarioService.obtenerSeguidores(correoUsuario);
+        return new ResponseEntity<>(seguidores, HttpStatus.OK);
     }
 
 }

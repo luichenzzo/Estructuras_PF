@@ -39,14 +39,14 @@ public class UsuarioService {
         }
 
         // Verificar si el usuario ya existe
-        Optional<Usuario> usuarioExistente = usuarioRepository.findByUsuario(correo);
+        Optional<Usuario> usuarioExistente = usuarioRepository.findByCorreo(correo);
         if (usuarioExistente.isPresent()) {
             throw new RecursoDuplicadoException("Ya existe un usuario con el correo: " + correo);
         }
 
         Usuario usuario = new Usuario();
         usuario.setNombre(nombre);
-        usuario.setUsuario(correo);
+        usuario.setCorreo(correo);
         usuario.setContrasena(contrasena);
         usuario.setListaFavoritos(new ListaEnlazada<>());
         usuario.setListasDeReproduccion(new ListaEnlazada<>());
@@ -57,27 +57,27 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
-    public Optional<Usuario> obtenerUsuarioPorCorreo(String usuario) {
-        if (usuario == null || usuario.trim().isEmpty()) {
+    public Optional<Usuario> obtenerUsuarioPorCorreo(String correo) {
+        if (correo == null || correo.trim().isEmpty()) {
             throw new DatosInvalidosException("El correo no puede estar vacío");
         }
 
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsuario(usuario);
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByCorreo(correo);
         if (usuarioOpt.isEmpty()) {
-            throw new UsuarioNoEncontradoException(usuario);
+            throw new UsuarioNoEncontradoException(correo);
         }
 
         return usuarioOpt;
     }
 
     // Helper: obtiene Usuario o lanza UsuarioNoEncontradoException / DatosInvalidosException
-    private Usuario getUsuarioByNombre(String nombreUsuario) {
-        if (nombreUsuario == null || nombreUsuario.trim().isEmpty()) {
-            throw new DatosInvalidosException("El nombre de usuario no puede estar vacío");
+    private Usuario getUsuarioByCorreo(String correo) {
+        if (correo == null || correo.trim().isEmpty()) {
+            throw new DatosInvalidosException("El correo de usuario no puede estar vacío");
         }
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsuario(nombreUsuario);
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByCorreo(correo);
         if (usuarioOpt.isEmpty()) {
-            throw new UsuarioNoEncontradoException(nombreUsuario);
+            throw new UsuarioNoEncontradoException(correo);
         }
         return usuarioOpt.get();
     }
@@ -109,8 +109,8 @@ public class UsuarioService {
         return cancionEncontrada;
     }
 
-    public List<Cancion> likearCancion(String nombreUsuario, String tituloCancion) {
-        Usuario usuario = getUsuarioByNombre(nombreUsuario);
+    public List<Cancion> likearCancion(String correoUsuario, String tituloCancion) {
+        Usuario usuario = getUsuarioByCorreo(correoUsuario);
         Cancion cancionEncontrada = encontrarCancionPorTitulo(tituloCancion);
 
         // Inicializar lista de favoritos si es null
@@ -136,8 +136,8 @@ public class UsuarioService {
         return favoritos;
     }
 
-    public List<Cancion> dislikearCancion(String nombreUsuario, String tituloCancion) {
-        Usuario usuario = getUsuarioByNombre(nombreUsuario);
+    public List<Cancion> dislikearCancion(String correoUsuario, String tituloCancion) {
+        Usuario usuario = getUsuarioByCorreo(correoUsuario);
         Cancion cancionEncontrada = encontrarCancionPorTitulo(tituloCancion);
 
         // Inicializar lista de favoritos si es null
@@ -175,9 +175,9 @@ public class UsuarioService {
 
 
     //TODO: Metodo permite seguirse a uno mismo, además no verifica correctamente si ya sigue al usuario.
-    public void seguirUsuario(String nombreUsuario, String usuarioSeguir) {
-        Usuario usuario = getUsuarioByNombre(nombreUsuario);
-        Usuario usuarioAseguir = getUsuarioByNombre(usuarioSeguir);
+    public void seguirUsuario(String correoUsuario, String correoSeguir) {
+        Usuario usuario = getUsuarioByCorreo(correoUsuario);
+        Usuario usuarioAseguir = getUsuarioByCorreo(correoSeguir);
 
         // Inicializar listas si son null
         if (usuario.getSeguidos() == null) {
@@ -189,16 +189,16 @@ public class UsuarioService {
 
         // Verificar si ya sigue al usuario
         if (usuario.getSeguidos().contiene(usuarioAseguir)) {
-            throw new RecursoDuplicadoException("El usuario ya sigue a: " + usuarioSeguir);
+            throw new RecursoDuplicadoException("El usuario ya sigue a: " + correoSeguir);
         }
 
         // Agregar y persistir
         // To avoid circular references (usuario <-> usuarioAseguir) that cause StackOverflow when the
         // MongoDB mapper or Lombok-generated toString/equals traverse the graph, we add "shallow"
-        // Usuario instances (only id, usuario, nombre) into the lists instead of the full objects.
+        // Usuario instances (only id, correo, nombre) into the lists instead of the full objects.
         Usuario shallowAseguir = new Usuario(
                 usuarioAseguir.getId(),
-                usuarioAseguir.getUsuario(),
+                usuarioAseguir.getCorreo(),
                 null, // contrasena
                 usuarioAseguir.getNombre(),
                 null, // listaFavoritos
@@ -210,7 +210,7 @@ public class UsuarioService {
 
         Usuario shallowUsuario = new Usuario(
                 usuario.getId(),
-                usuario.getUsuario(),
+                usuario.getCorreo(),
                 null,
                 usuario.getNombre(),
                 null,
@@ -231,9 +231,9 @@ public class UsuarioService {
     }
 
     // TODO: Reallly have to check this
-    public void unseguirUsuario(String nombreUsuario, String usuarioUnseguir) {
-        Usuario usuario = getUsuarioByNombre(nombreUsuario);
-        Usuario usuarioAunseguir = getUsuarioByNombre(usuarioUnseguir);
+    public void unseguirUsuario(String correoUsuario, String correoUnseguir) {
+        Usuario usuario = getUsuarioByCorreo(correoUsuario);
+        Usuario usuarioAunseguir = getUsuarioByCorreo(correoUnseguir);
 
         // Inicializar listas si son null
         if (usuario.getSeguidos() == null) {
@@ -245,13 +245,13 @@ public class UsuarioService {
 
         // Verificar que sí sigue al usuario
         if (!usuario.getSeguidos().contiene(usuarioAunseguir)) {
-            throw new com.example.demo.excepciones.RecursoNoEncontradoException("El usuario no sigue a: " + usuarioUnseguir);
+            throw new com.example.demo.excepciones.RecursoNoEncontradoException("El usuario no sigue a: " + correoUnseguir);
         }
 
         // Construir referencias "shallow" similares a las usadas al agregar
         Usuario shallowAunseguir = new Usuario(
                 usuarioAunseguir.getId(),
-                usuarioAunseguir.getUsuario(),
+                usuarioAunseguir.getCorreo(),
                 null,
                 usuarioAunseguir.getNombre(),
                 null,
@@ -263,7 +263,7 @@ public class UsuarioService {
 
         Usuario shallowUsuario = new Usuario(
                 usuario.getId(),
-                usuario.getUsuario(),
+                usuario.getCorreo(),
                 null,
                 usuario.getNombre(),
                 null,
@@ -279,11 +279,29 @@ public class UsuarioService {
 
         if (!removedFromSeguidos || !removedFromSeguidores) {
             // Si por alguna razón no se eliminaron correctamente, lanzar excepción
-            throw new com.example.demo.excepciones.RecursoNoEncontradoException("No se pudo dejar de seguir a: " + usuarioUnseguir);
+            throw new com.example.demo.excepciones.RecursoNoEncontradoException("No se pudo dejar de seguir a: " + correoUnseguir);
         }
 
         // Persistir cambios en ambas entidades
         usuarioRepository.save(usuario);
         usuarioRepository.save(usuarioAunseguir);
+    }
+
+
+    public List<Usuario> obtenerSeguidores(String correoUsuario) {
+        Usuario usuario = getUsuarioByCorreo(correoUsuario);
+
+        // Inicializar lista si es null
+        if (usuario.getSeguidores() == null) {
+            usuario.setSeguidores(new ListaEnlazada<>());
+        }
+
+        // Convertir la lista enlazada a java.util.List y retornarla
+        List<Usuario> seguidores = new ArrayList<>();
+        for (Usuario u : usuario.getSeguidores()) {
+            seguidores.add(u);
+        }
+
+        return seguidores;
     }
 }
