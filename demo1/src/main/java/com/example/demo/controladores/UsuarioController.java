@@ -68,6 +68,14 @@ public class UsuarioController {
     }
 
 
-    ///@GetMapping("unseguir")
+    @GetMapping("/unseguir")
+    public ResponseEntity<Void> unseguirUsuario (@RequestParam String nombreUsuario, @RequestParam String usuarioUnseguir){
+        try {
+            usuarioService.unseguirUsuario(nombreUsuario, usuarioUnseguir);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
 
 }

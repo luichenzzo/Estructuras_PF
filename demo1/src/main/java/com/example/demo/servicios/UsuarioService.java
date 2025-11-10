@@ -174,7 +174,7 @@ public class UsuarioService {
     }
 
 
-    //TODO: Metodo permite seguirse a uno mismo, además no verifica correctamente si ya sigue al usuario. 
+    //TODO: Metodo permite seguirse a uno mismo, además no verifica correctamente si ya sigue al usuario.
     public void seguirUsuario(String nombreUsuario, String usuarioSeguir) {
         Usuario usuario = getUsuarioByNombre(nombreUsuario);
         Usuario usuarioAseguir = getUsuarioByNombre(usuarioSeguir);
@@ -228,5 +228,62 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
         usuarioRepository.save(usuarioAseguir);
 
+    }
+
+    // TODO: Reallly have to check this
+    public void unseguirUsuario(String nombreUsuario, String usuarioUnseguir) {
+        Usuario usuario = getUsuarioByNombre(nombreUsuario);
+        Usuario usuarioAunseguir = getUsuarioByNombre(usuarioUnseguir);
+
+        // Inicializar listas si son null
+        if (usuario.getSeguidos() == null) {
+            usuario.setSeguidos(new ListaEnlazada<>());
+        }
+        if (usuarioAunseguir.getSeguidores() == null) {
+            usuarioAunseguir.setSeguidores(new ListaEnlazada<>());
+        }
+
+        // Verificar que sí sigue al usuario
+        if (!usuario.getSeguidos().contiene(usuarioAunseguir)) {
+            throw new com.example.demo.excepciones.RecursoNoEncontradoException("El usuario no sigue a: " + usuarioUnseguir);
+        }
+
+        // Construir referencias "shallow" similares a las usadas al agregar
+        Usuario shallowAunseguir = new Usuario(
+                usuarioAunseguir.getId(),
+                usuarioAunseguir.getUsuario(),
+                null,
+                usuarioAunseguir.getNombre(),
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        Usuario shallowUsuario = new Usuario(
+                usuario.getId(),
+                usuario.getUsuario(),
+                null,
+                usuario.getNombre(),
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        // Intentar eliminar de ambas listas
+        boolean removedFromSeguidos = usuario.getSeguidos().eliminar(shallowAunseguir);
+        boolean removedFromSeguidores = usuarioAunseguir.getSeguidores().eliminar(shallowUsuario);
+
+        if (!removedFromSeguidos || !removedFromSeguidores) {
+            // Si por alguna razón no se eliminaron correctamente, lanzar excepción
+            throw new com.example.demo.excepciones.RecursoNoEncontradoException("No se pudo dejar de seguir a: " + usuarioUnseguir);
+        }
+
+        // Persistir cambios en ambas entidades
+        usuarioRepository.save(usuario);
+        usuarioRepository.save(usuarioAunseguir);
     }
 }
