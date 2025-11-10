@@ -304,4 +304,19 @@ public class UsuarioService {
 
         return seguidores;
     }
+
+    public Optional<Usuario> loginUsuario(String correo, String contrasena) {
+        if (correo == null || correo.trim().isEmpty() || contrasena == null || contrasena.trim().isEmpty()) {
+            throw new DatosInvalidosException("Correo y contraseña son obligatorios");
+        }
+
+        // Usar el método que busca por correo y contraseña directamente
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByCorreoAndContrasena(correo, contrasena);
+
+        if (usuarioOpt.isEmpty()) {
+            throw new UsuarioNoEncontradoException("Correo o contraseña incorrectos para: " + correo);
+        }
+
+        return usuarioOpt;
+    }
 }

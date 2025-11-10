@@ -84,4 +84,14 @@ public class UsuarioController {
         return new ResponseEntity<>(seguidores, HttpStatus.OK);
     }
 
+
+    @GetMapping("/login")
+    public ResponseEntity<Usuario> loginUsuario (@RequestParam String correo, @RequestParam String contrasena){
+        Optional<Usuario> usuarioOpt = usuarioService.loginUsuario(correo, contrasena);
+        if (usuarioOpt.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        return new ResponseEntity<>(usuarioOpt.get(), HttpStatus.OK);
+    }
+
 }
