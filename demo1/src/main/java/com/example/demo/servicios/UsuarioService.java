@@ -173,7 +173,9 @@ public class UsuarioService {
         return favoritos;
     }
 
-    public List<Usuario> seguirUsuario(String nombreUsuario, String usuarioSeguir) {
+
+    //TODO: Metodo permite seguirse a uno mismo, además no verifica correctamente si ya sigue al usuario. 
+    public void seguirUsuario(String nombreUsuario, String usuarioSeguir) {
         Usuario usuario = getUsuarioByNombre(nombreUsuario);
         Usuario usuarioAseguir = getUsuarioByNombre(usuarioSeguir);
 
@@ -219,18 +221,12 @@ public class UsuarioService {
         );
 
         usuario.getSeguidos().agregar(shallowAseguir);
+        System.out.println(usuario.getSeguidos().toString());
         usuarioAseguir.getSeguidores().agregar(shallowUsuario);
 
         // Persist both sides (they now contain only shallow references to each other)
         usuarioRepository.save(usuario);
         usuarioRepository.save(usuarioAseguir);
 
-        // Convertir la lista enlazada a java.util.List y retornarla
-        List<Usuario> seguidos = new ArrayList<>();
-        for (Usuario u : usuario.getSeguidos()) {
-            seguidos.add(u);
-        }
-
-        return seguidos;
     }
 }
