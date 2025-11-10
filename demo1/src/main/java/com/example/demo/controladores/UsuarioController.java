@@ -30,6 +30,9 @@ public class UsuarioController {
     @GetMapping
     public ResponseEntity<Usuario> obtenerUsuarioPorCorreo(@RequestParam String correo) {
         Optional<Usuario> usuarioOpt = usuarioService.obtenerUsuarioPorCorreo(correo);
+        if (usuarioOpt.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
         return new ResponseEntity<>(usuarioOpt.get(), HttpStatus.OK);
     }
 
@@ -43,5 +46,11 @@ public class UsuarioController {
 
     }
 
+    // Endpoint para quitar like (dislike) reutilizando la lógica del servicio
+    @GetMapping("/dislike")
+    public ResponseEntity<List<Cancion>> dislikearCancion (@RequestParam String nombreUsuario, @RequestParam String tituloCancion) {
+        List<Cancion> canciones = usuarioService.dislikearCancion(nombreUsuario, tituloCancion);
+        return new ResponseEntity<>(canciones, HttpStatus.OK);
+    }
 
 }

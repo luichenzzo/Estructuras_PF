@@ -68,6 +68,7 @@ public class CancionService {
 
         // Agregar la canción a la lista de canciones del álbum
         album.getCanciones().agregar(cancionGuardada);
+
         albumRepository.save(album);
 
         return cancionGuardada;

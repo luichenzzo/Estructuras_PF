@@ -58,25 +58,31 @@ public class ListaEnlazada<T> implements Lista<T> {
 
     @Override
     public boolean eliminar(T elemento) {
+        System.out.println("Voy a eliminar");
         if (cabeza == null) {
+            System.out.println("No hay");
             return false;
         }
 
         if (cabeza.getDato().equals(elemento)) {
             cabeza = cabeza.getSiguiente();
             tamanio--;
+            System.out.println("Eliminado en cabeza");
             return true;
         }
 
         Nodo<T> actual = cabeza;
+
         while (actual.getSiguiente() != null) {
             if (actual.getSiguiente().getDato().equals(elemento)) {
                 actual.setSiguiente(actual.getSiguiente().getSiguiente());
                 tamanio--;
+                System.out.println("Eliminado en medio o final");
                 return true;
             }
             actual = actual.getSiguiente();
         }
+        System.out.println(" no Eliminado");
         return false;
     }
 
@@ -119,6 +125,8 @@ public class ListaEnlazada<T> implements Lista<T> {
     public boolean contiene(T elemento) {
         Nodo<T> actual = cabeza;
         while (actual != null) {
+            System.out.println("Comparando con: " + actual.getDato());
+            System.out.println("Elemento buscado: " + elemento);
             if (actual.getDato().equals(elemento)) {
                 return true;
             }
@@ -193,7 +201,12 @@ public class ListaEnlazada<T> implements Lista<T> {
         StringBuilder sb = new StringBuilder("[");
         Nodo<T> actual = cabeza;
         while (actual != null) {
-            sb.append(actual.getDato());
+            T dato = actual.getDato();
+            if (dato == this) {
+                sb.append("(this ListaEnlazada)");
+            } else {
+                sb.append(String.valueOf(dato));
+            }
             if (actual.getSiguiente() != null) {
                 sb.append(", ");
             }

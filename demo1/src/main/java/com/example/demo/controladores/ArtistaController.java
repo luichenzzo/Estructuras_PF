@@ -20,6 +20,7 @@ public class ArtistaController {
 
     @PostMapping
     public ResponseEntity<Artista> guardarArtista(@RequestBody ArtistaRegistroDTO artistaDTO) {
+        System.out.println("Entrada" + artistaDTO.getURLFotoArtista());
         Artista artistaGuardado = artistaService.guardarArtista(artistaDTO);
         return new ResponseEntity<>(artistaGuardado, HttpStatus.CREATED);
     }

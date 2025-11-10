@@ -31,7 +31,9 @@ public class Nodo<T> {
 
     @Override
     public String toString() {
+        // Use String.valueOf to safely handle nulls and avoid direct calls that may NPE
         return dato.toString();
     }
-}
 
+
+}

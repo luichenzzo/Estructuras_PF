@@ -31,7 +31,7 @@ public class ArtistaService {
         if (artistaExistente.isPresent()) {
             throw new RecursoDuplicadoException("Ya existe un artista con el nombre: " + artistaDTO.getNombre());
         }
-
+        System.out.println(artistaDTO.getURLFotoArtista());
         Artista artista = new Artista();
         artista.setNombre(artistaDTO.getNombre());
         artista.setNacionalidad(artistaDTO.getNacionalidad());
@@ -39,7 +39,7 @@ public class ArtistaService {
         artista.setGeneroSecundario(artistaDTO.getGeneroSecundario());
         artista.setURLFotoArtista(artistaDTO.getURLFotoArtista());
         artista.setAlbumes(new ListaDoblementeEnlazada<>());
-
+        System.out.println(artista.toString());
         return artistaRepository.save(artista);
     }
 

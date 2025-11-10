@@ -68,23 +68,24 @@ public class UsuarioService {
         return usuarioOpt;
     }
 
-    public List<Cancion> likearCancion(String nombreUsuario, String tituloCancion) {
-        // Validaciones básicas
+    // Helper: obtiene Usuario o lanza UsuarioNoEncontradoException / DatosInvalidosException
+    private Usuario getUsuarioByNombre(String nombreUsuario) {
         if (nombreUsuario == null || nombreUsuario.trim().isEmpty()) {
             throw new DatosInvalidosException("El nombre de usuario no puede estar vacío");
         }
-        if (tituloCancion == null || tituloCancion.trim().isEmpty()) {
-            throw new DatosInvalidosException("El título de la canción no puede estar vacío");
-        }
-
-        // Buscar usuario
         Optional<Usuario> usuarioOpt = usuarioRepository.findByUsuario(nombreUsuario);
         if (usuarioOpt.isEmpty()) {
             throw new UsuarioNoEncontradoException(nombreUsuario);
         }
-        Usuario usuario = usuarioOpt.get();
+        return usuarioOpt.get();
+    }
 
-        // Buscar canción por título (buscar coincidencias y luego intentar un match exacto ignorando mayúsculas)
+    // Helper: busca una canción por título (coincidencia exacta ignorando mayúsculas o primera coincidencia)
+    private Cancion encontrarCancionPorTitulo(String tituloCancion) {
+        if (tituloCancion == null || tituloCancion.trim().isEmpty()) {
+            throw new DatosInvalidosException("El título de la canción no puede estar vacío");
+        }
+
         List<Cancion> resultados = cancionRepository.findByTituloContainingIgnoreCase(tituloCancion.trim());
         Cancion cancionEncontrada = null;
         if (resultados != null && !resultados.isEmpty()) {
@@ -94,7 +95,6 @@ public class UsuarioService {
                     break;
                 }
             }
-            // si no hubo igualdad exacta, tomar la primera coincidencia
             if (cancionEncontrada == null) {
                 cancionEncontrada = resultados.get(0);
             }
@@ -103,6 +103,13 @@ public class UsuarioService {
         if (cancionEncontrada == null) {
             throw new CancionNoEncontradaException(tituloCancion);
         }
+
+        return cancionEncontrada;
+    }
+
+    public List<Cancion> likearCancion(String nombreUsuario, String tituloCancion) {
+        Usuario usuario = getUsuarioByNombre(nombreUsuario);
+        Cancion cancionEncontrada = encontrarCancionPorTitulo(tituloCancion);
 
         // Inicializar lista de favoritos si es null
         if (usuario.getListaFavoritos() == null) {
@@ -116,6 +123,43 @@ public class UsuarioService {
 
         // Agregar y persistir
         usuario.getListaFavoritos().agregar(cancionEncontrada);
+        usuarioRepository.save(usuario);
+
+        // Convertir la lista enlazada a java.util.List y retornarla
+        List<Cancion> favoritos = new ArrayList<>();
+        for (Cancion c : usuario.getListaFavoritos()) {
+            favoritos.add(c);
+        }
+
+        return favoritos;
+    }
+
+    public List<Cancion> dislikearCancion(String nombreUsuario, String tituloCancion) {
+        Usuario usuario = getUsuarioByNombre(nombreUsuario);
+        Cancion cancionEncontrada = encontrarCancionPorTitulo(tituloCancion);
+
+        // Inicializar lista de favoritos si es null
+        if (usuario.getListaFavoritos() == null) {
+            usuario.setListaFavoritos(new ListaEnlazada<>());
+        }
+        System.out.println("Lista: ");
+        System.out.println(usuario.getListaFavoritos().toString());
+        System.out.println(cancionEncontrada.toString());
+        // Verificar que la canción exista en favoritos
+        boolean flag = false;
+        for( Cancion c : usuario.getListaFavoritos()){
+            if (c.getId().equals(cancionEncontrada.getId())) {
+                System.out.println("Cancion encontrada en favoritos: " + c.toString());
+                flag = true;
+            }
+        }
+        if (!flag) {
+            // Si la canción no está en favoritos, lanzar excepción de recurso no encontrado para indicar que no puede quitarse
+            throw new com.example.demo.excepciones.RecursoNoEncontradoException("La canción no está en la lista de favoritos del usuario");
+        }
+
+        // Remover la canción y persistir
+        usuario.getListaFavoritos().eliminar(cancionEncontrada);
         usuarioRepository.save(usuario);
 
         // Convertir la lista enlazada a java.util.List y retornarla
