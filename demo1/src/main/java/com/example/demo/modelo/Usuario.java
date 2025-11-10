@@ -24,5 +24,7 @@ public class Usuario {
     private ListaEnlazada<Cancion> listaFavoritos;
     private ListaEnlazada<Playlist> listasDeReproduccion;
     private Cola<Cancion> colaReproduccion;
+    private ListaEnlazada <Usuario> seguidores;
+    private ListaEnlazada <Usuario> seguidos;
 
 }

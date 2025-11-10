@@ -51,6 +51,8 @@ public class UsuarioService {
         usuario.setListaFavoritos(new ListaEnlazada<>());
         usuario.setListasDeReproduccion(new ListaEnlazada<>());
         usuario.setColaReproduccion(new Cola<>());
+        usuario.setSeguidores(new ListaEnlazada<>());
+        usuario.setSeguidos(new ListaEnlazada<>());
 
         return usuarioRepository.save(usuario);
     }
@@ -169,5 +171,66 @@ public class UsuarioService {
         }
 
         return favoritos;
+    }
+
+    public List<Usuario> seguirUsuario(String nombreUsuario, String usuarioSeguir) {
+        Usuario usuario = getUsuarioByNombre(nombreUsuario);
+        Usuario usuarioAseguir = getUsuarioByNombre(usuarioSeguir);
+
+        // Inicializar listas si son null
+        if (usuario.getSeguidos() == null) {
+            usuario.setSeguidos(new ListaEnlazada<>());
+        }
+        if (usuarioAseguir.getSeguidores() == null) {
+            usuarioAseguir.setSeguidores(new ListaEnlazada<>());
+        }
+
+        // Verificar si ya sigue al usuario
+        if (usuario.getSeguidos().contiene(usuarioAseguir)) {
+            throw new RecursoDuplicadoException("El usuario ya sigue a: " + usuarioSeguir);
+        }
+
+        // Agregar y persistir
+        // To avoid circular references (usuario <-> usuarioAseguir) that cause StackOverflow when the
+        // MongoDB mapper or Lombok-generated toString/equals traverse the graph, we add "shallow"
+        // Usuario instances (only id, usuario, nombre) into the lists instead of the full objects.
+        Usuario shallowAseguir = new Usuario(
+                usuarioAseguir.getId(),
+                usuarioAseguir.getUsuario(),
+                null, // contrasena
+                usuarioAseguir.getNombre(),
+                null, // listaFavoritos
+                null, // listasDeReproduccion
+                null, // colaReproduccion
+                null, // seguidores
+                null  // seguidos
+        );
+
+        Usuario shallowUsuario = new Usuario(
+                usuario.getId(),
+                usuario.getUsuario(),
+                null,
+                usuario.getNombre(),
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        usuario.getSeguidos().agregar(shallowAseguir);
+        usuarioAseguir.getSeguidores().agregar(shallowUsuario);
+
+        // Persist both sides (they now contain only shallow references to each other)
+        usuarioRepository.save(usuario);
+        usuarioRepository.save(usuarioAseguir);
+
+        // Convertir la lista enlazada a java.util.List y retornarla
+        List<Usuario> seguidos = new ArrayList<>();
+        for (Usuario u : usuario.getSeguidos()) {
+            seguidos.add(u);
+        }
+
+        return seguidos;
     }
 }

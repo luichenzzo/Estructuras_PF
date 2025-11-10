@@ -53,4 +53,14 @@ public class UsuarioController {
         return new ResponseEntity<>(canciones, HttpStatus.OK);
     }
 
+    @GetMapping("/seguir")
+    public ResponseEntity<List<Usuario>> seguirUsuario (@RequestParam String nombreUsuario, @RequestParam String usuarioSeguir){
+        List<Usuario> usuarios = usuarioService.seguirUsuario(nombreUsuario, usuarioSeguir);
+        return new ResponseEntity<>(usuarios, HttpStatus.OK);
+
+    }
+
+
+    ///@GetMapping("unseguir")
+
 }
