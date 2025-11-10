@@ -2,6 +2,8 @@ package com.example.demo.estructuras;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 /**
  * Implementación de una Lista Simplemente Enlazada
@@ -64,7 +66,7 @@ public class ListaEnlazada<T> implements Lista<T> {
             return false;
         }
 
-        if (cabeza.getDato().equals(elemento)) {
+        if (elementosIguales(cabeza.getDato(), elemento)) {
             cabeza = cabeza.getSiguiente();
             tamanio--;
             System.out.println("Eliminado en cabeza");
@@ -74,7 +76,7 @@ public class ListaEnlazada<T> implements Lista<T> {
         Nodo<T> actual = cabeza;
 
         while (actual.getSiguiente() != null) {
-            if (actual.getSiguiente().getDato().equals(elemento)) {
+            if (elementosIguales(actual.getSiguiente().getDato(), elemento)) {
                 actual.setSiguiente(actual.getSiguiente().getSiguiente());
                 tamanio--;
                 System.out.println("Eliminado en medio o final");
@@ -127,7 +129,7 @@ public class ListaEnlazada<T> implements Lista<T> {
         while (actual != null) {
             System.out.println("Comparando con: " + actual.getDato());
             System.out.println("Elemento buscado: " + elemento);
-            if (actual.getDato().equals(elemento)) {
+            if (elementosIguales(actual.getDato(), elemento)) {
                 return true;
             }
             actual = actual.getSiguiente();
@@ -140,7 +142,7 @@ public class ListaEnlazada<T> implements Lista<T> {
         Nodo<T> actual = cabeza;
         int indice = 0;
         while (actual != null) {
-            if (actual.getDato().equals(elemento)) {
+            if (elementosIguales(actual.getDato(), elemento)) {
                 return indice;
             }
             actual = actual.getSiguiente();
@@ -189,6 +191,40 @@ public class ListaEnlazada<T> implements Lista<T> {
             T dato = actual.getDato();
             actual = actual.getSiguiente();
             return dato;
+        }
+    }
+
+    // Nuevo método helper que intenta comparar dos elementos usando equals
+    // y, si falla, intenta comparar sus IDs mediante reflexión (getId o campo `id`).
+    private boolean elementosIguales(T a, T b) {
+        if (a == b) return true;
+        if (a == null || b == null) return false;
+        try {
+            if (a.equals(b)) return true;
+        } catch (Exception ignored) {}
+
+        Object ida = obtenerId(a);
+        Object idb = obtenerId(b);
+        if (ida != null && idb != null) {
+            return ida.equals(idb);
+        }
+        return false;
+    }
+
+    private Object obtenerId(Object o) {
+        if (o == null) return null;
+        try {
+            Method m = o.getClass().getMethod("getId");
+            return m.invoke(o);
+        } catch (Exception e) {
+            // intentar campo "id"
+            try {
+                Field f = o.getClass().getDeclaredField("id");
+                f.setAccessible(true);
+                return f.get(o);
+            } catch (Exception ex) {
+                return null;
+            }
         }
     }
 
