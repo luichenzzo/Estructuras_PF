@@ -1,6 +1,5 @@
 package com.example.demo.servicios;
 
-import com.example.demo.estructuras.ListaRedonda;
 import com.example.demo.modelo.Cancion;
 import com.example.demo.modelo.Usuario;
 import com.example.demo.repositorio.UsuarioRepository;
@@ -52,8 +51,6 @@ public class UsuarioService {
         usuario.setListaFavoritos(new ListaEnlazada<>());
         usuario.setListasDeReproduccion(new ListaEnlazada<>());
         usuario.setColaReproduccion(new Cola<>());
-        usuario.setSeguidores(new ListaRedonda<>());
-        usuario.setSeguidos(new ListaRedonda<>());
 
         return usuarioRepository.save(usuario);
     }
@@ -72,7 +69,6 @@ public class UsuarioService {
     }
 
     public List<Cancion> likearCancion(String nombreUsuario, String tituloCancion) {
-
         // Validaciones básicas
         if (nombreUsuario == null || nombreUsuario.trim().isEmpty()) {
             throw new DatosInvalidosException("El nombre de usuario no puede estar vacío");
@@ -130,67 +126,4 @@ public class UsuarioService {
 
         return favoritos;
     }
-
-    public List<Cancion> dislikearCancion(String nombreUsuario, String tituloCancion) {
-        System.out.println("Dislike request received for user: " + nombreUsuario + " and song: " + tituloCancion);
-        // Validaciones básicas
-        if (nombreUsuario == null || nombreUsuario.trim().isEmpty()) {
-            throw new DatosInvalidosException("El nombre de usuario no puede estar vacío");
-        }
-        if (tituloCancion == null || tituloCancion.trim().isEmpty()) {
-            throw new DatosInvalidosException("El título de la canción no puede estar vacío");
-        }
-
-        // Buscar usuario
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsuario(nombreUsuario);
-        if (usuarioOpt.isEmpty()) {
-            throw new UsuarioNoEncontradoException(nombreUsuario);
-        }
-        Usuario usuario = usuarioOpt.get();
-        System.out.println("paso 1");
-
-        // Buscar canción por título (buscar coincidencias y luego intentar un match exacto ignorando mayúsculas)
-        List<Cancion> resultados = cancionRepository.findByTituloContainingIgnoreCase(tituloCancion.trim());
-        Cancion cancionEncontrada = null;
-        if (resultados != null && !resultados.isEmpty()) {
-            for (Cancion c : resultados) {
-                System.out.println(c.getTitulo());
-                if (c.getTitulo() != null && c.getTitulo().equalsIgnoreCase(tituloCancion.trim())) {
-                    cancionEncontrada = c;
-                    System.out.println("Match!");
-                    break;
-                }
-            }
-            // si no hubo igualdad exacta, tomar la primera coincidencia
-            if (cancionEncontrada == null) {
-                cancionEncontrada = resultados.get(0);
-            }
-        }
-
-        if (cancionEncontrada == null) {
-            throw new CancionNoEncontradaException(tituloCancion);
-        }
-
-        // Inicializar lista de favoritos si es null
-        if (usuario.getListaFavoritos() == null) {
-            usuario.setListaFavoritos(new ListaEnlazada<>());
-        }
-        // Verificar que exista en favoritos (si no está, lanzar excepción)
-        if (!usuario.getListaFavoritos().contiene(cancionEncontrada)) {
-            throw new CancionNoEncontradaException("La canción no está en la lista de favoritos del usuario");
-        }
-
-        // Remover y persistir
-        usuario.getListaFavoritos().eliminar(cancionEncontrada);
-        usuarioRepository.save(usuario);
-        System.out.println("paso 2");
-        // Convertir la lista enlazada a java.util.List y retornarla
-        List<Cancion> favoritos = new ArrayList<>();
-        for (Cancion c : usuario.getListaFavoritos()) {
-            favoritos.add(c);
-        }
-
-        return favoritos;
-    }
-
 }

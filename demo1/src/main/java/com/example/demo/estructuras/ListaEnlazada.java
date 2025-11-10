@@ -58,7 +58,6 @@ public class ListaEnlazada<T> implements Lista<T> {
 
     @Override
     public boolean eliminar(T elemento) {
-        System.out.println("Intentando eliminar elemento: " + elemento);
         if (cabeza == null) {
             return false;
         }
@@ -118,7 +117,6 @@ public class ListaEnlazada<T> implements Lista<T> {
 
     @Override
     public boolean contiene(T elemento) {
-        System.out.println("Buscando elemento: " + elemento);
         Nodo<T> actual = cabeza;
         while (actual != null) {
             if (actual.getDato().equals(elemento)) {
