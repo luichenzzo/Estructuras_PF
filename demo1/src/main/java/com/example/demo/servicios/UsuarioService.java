@@ -26,6 +26,9 @@ public class UsuarioService {
     @Autowired
     private CancionRepository cancionRepository;
 
+    @Autowired
+    private GrafoSocialService grafoSocialService;
+
     public Usuario guardarUsuario(String nombre, String correo, String contrasena) {
         // Validar datos
         if (nombre == null || nombre.trim().isEmpty()) {
@@ -179,6 +182,11 @@ public class UsuarioService {
         Usuario usuario = getUsuarioByCorreo(correoUsuario);
         Usuario usuarioAseguir = getUsuarioByCorreo(correoSeguir);
 
+        // Evitar que un usuario se siga a sí mismo
+        if (usuario.getId().equals(usuarioAseguir.getId())) {
+            throw new DatosInvalidosException("Un usuario no puede seguirse a sí mismo");
+        }
+
         // Inicializar listas si son null
         if (usuario.getSeguidos() == null) {
             usuario.setSeguidos(new ListaEnlazada<>());
@@ -193,9 +201,6 @@ public class UsuarioService {
         }
 
         // Agregar y persistir
-        // To avoid circular references (usuario <-> usuarioAseguir) that cause StackOverflow when the
-        // MongoDB mapper or Lombok-generated toString/equals traverse the graph, we add "shallow"
-        // Usuario instances (only id, correo, nombre) into the lists instead of the full objects.
         Usuario shallowAseguir = new Usuario(
                 usuarioAseguir.getId(),
                 usuarioAseguir.getCorreo(),
@@ -221,13 +226,16 @@ public class UsuarioService {
         );
 
         usuario.getSeguidos().agregar(shallowAseguir);
-        System.out.println(usuario.getSeguidos().toString());
         usuarioAseguir.getSeguidores().agregar(shallowUsuario);
 
-        // Persist both sides (they now contain only shallow references to each other)
+        // Persist both sides
         usuarioRepository.save(usuario);
         usuarioRepository.save(usuarioAseguir);
 
+        // Actualizar el grafo social: verificar si es conexión bidireccional (amistad)
+        if (verificarAmistadBidireccional(usuario.getId(), usuarioAseguir.getId())) {
+            grafoSocialService.conectarUsuarios(usuario.getId(), usuarioAseguir.getId());
+        }
     }
 
     // TODO: Reallly have to check this
@@ -278,15 +286,55 @@ public class UsuarioService {
         boolean removedFromSeguidores = usuarioAunseguir.getSeguidores().eliminar(shallowUsuario);
 
         if (!removedFromSeguidos || !removedFromSeguidores) {
-            // Si por alguna razón no se eliminaron correctamente, lanzar excepción
             throw new com.example.demo.excepciones.RecursoNoEncontradoException("No se pudo dejar de seguir a: " + correoUnseguir);
         }
 
         // Persistir cambios en ambas entidades
         usuarioRepository.save(usuario);
         usuarioRepository.save(usuarioAunseguir);
+
+        // Actualizar el grafo social: eliminar la conexión bidireccional
+        grafoSocialService.desconectarUsuarios(usuario.getId(), usuarioAunseguir.getId());
     }
 
+    /**
+     * Verifica si dos usuarios se siguen mutuamente (amistad bidireccional)
+     */
+    private boolean verificarAmistadBidireccional(String userId1, String userId2) {
+        Optional<Usuario> u1Opt = usuarioRepository.findById(userId1);
+        Optional<Usuario> u2Opt = usuarioRepository.findById(userId2);
+
+        if (u1Opt.isEmpty() || u2Opt.isEmpty()) {
+            return false;
+        }
+
+        Usuario u1 = u1Opt.get();
+        Usuario u2 = u2Opt.get();
+
+        // Verificar si u1 sigue a u2 Y u2 sigue a u1
+        boolean u1SigueU2 = false;
+        boolean u2SigueU1 = false;
+
+        if (u1.getSeguidos() != null) {
+            for (Usuario seguido : u1.getSeguidos()) {
+                if (seguido.getId().equals(userId2)) {
+                    u1SigueU2 = true;
+                    break;
+                }
+            }
+        }
+
+        if (u2.getSeguidos() != null) {
+            for (Usuario seguido : u2.getSeguidos()) {
+                if (seguido.getId().equals(userId1)) {
+                    u2SigueU1 = true;
+                    break;
+                }
+            }
+        }
+
+        return u1SigueU2 && u2SigueU1;
+    }
 
     public List<Usuario> obtenerSeguidores(String correoUsuario) {
         Usuario usuario = getUsuarioByCorreo(correoUsuario);
@@ -318,5 +366,14 @@ public class UsuarioService {
         }
 
         return usuarioOpt;
+    }
+
+    /**
+     * Obtiene un usuario por su ID
+     * @param id ID del usuario
+     * @return Optional con el usuario si existe
+     */
+    public Optional<Usuario> obtenerUsuarioPorId(String id) {
+        return usuarioRepository.findById(id);
     }
 }

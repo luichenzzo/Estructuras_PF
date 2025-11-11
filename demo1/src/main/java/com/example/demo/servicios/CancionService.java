@@ -130,7 +130,16 @@ public class CancionService {
     }
 
     public List<Cancion> obtenerCanciones() {
-
         return cancionRepository.findAll();
+    }
+
+    /**
+     * Obtiene una canción por su ID
+     *
+     * @param id ID de la canción
+     * @return Optional con la canción si existe
+     */
+    public Optional<Cancion> obtenerCancionPorId(String id) {
+        return cancionRepository.findById(id);
     }
 }
