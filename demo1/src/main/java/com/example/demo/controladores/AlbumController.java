@@ -67,7 +67,7 @@ public class AlbumController {
      */
     @GetMapping("/nombre")
     public ResponseEntity<Album> obtenerAlbumPorNombre(@RequestParam("nombre") String nombre) {
-        Optional<Album> albumOpt = albumService.obtenerAlbumPorNombre(nombre.trim());
-        return new ResponseEntity<>(albumOpt.get(), HttpStatus.OK);
+        Album album = albumService.obtenerAlbumPorNombre(nombre.trim()).get();
+        return new ResponseEntity<>(album, HttpStatus.OK);
     }
 }

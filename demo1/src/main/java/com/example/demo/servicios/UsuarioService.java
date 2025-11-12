@@ -9,6 +9,7 @@ import com.example.demo.excepciones.DatosInvalidosException;
 import com.example.demo.excepciones.RecursoDuplicadoException;
 import com.example.demo.excepciones.UsuarioNoEncontradoException;
 import com.example.demo.excepciones.CancionNoEncontradaException;
+import com.example.demo.excepciones.AutenticacionFallidaException;
 import com.example.demo.repositorio.CancionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -442,20 +443,30 @@ public class UsuarioService {
      *
      * @param correo     Correo del usuario
      * @param contrasena Contraseña del usuario
-     * @return Optional con el usuario si las credenciales son correctas
+     * @return Usuario autenticado
+     * @throws DatosInvalidosException Si el correo o contraseña están vacíos
+     * @throws UsuarioNoEncontradoException Si no existe el usuario
+     * @throws AutenticacionFallidaException Si la contraseña es incorrecta
      */
-    public Optional<Usuario> loginUsuario(String correo, String contrasena) {
+    public Usuario loginUsuario(String correo, String contrasena) {
+        if (correo == null || correo.trim().isEmpty()) {
+            throw new DatosInvalidosException("El correo no puede estar vacío");
+        }
+        if (contrasena == null || contrasena.trim().isEmpty()) {
+            throw new DatosInvalidosException("La contraseña no puede estar vacía");
+        }
+
         Optional<Usuario> usuarioOpt = usuarioRepository.findByCorreo(correo);
 
         if (usuarioOpt.isEmpty()) {
-            return Optional.empty();
+            throw new UsuarioNoEncontradoException(correo);
         }
 
         Usuario usuario = usuarioOpt.get();
-        if (usuario.getContrasena().equals(contrasena)) {
-            return Optional.of(usuario);
+        if (!usuario.getContrasena().equals(contrasena)) {
+            throw new AutenticacionFallidaException("Credenciales incorrectas");
         }
 
-        return Optional.empty();
+        return usuario;
     }
 }

@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Controlador REST para la gestión de usuarios.
@@ -43,15 +42,12 @@ public class UsuarioController {
      * Obtiene la información de un usuario por su correo electrónico.
      *
      * @param correo Correo electrónico del usuario
-     * @return ResponseEntity con el usuario encontrado o NOT_FOUND si no existe
+     * @return ResponseEntity con el usuario encontrado
      */
     @GetMapping
     public ResponseEntity<Usuario> obtenerUsuarioPorCorreo(@RequestParam String correo) {
-        Optional<Usuario> usuarioOpt = usuarioService.obtenerUsuarioPorCorreo(correo);
-        if (usuarioOpt.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(usuarioOpt.get(), HttpStatus.OK);
+        Usuario usuario = usuarioService.obtenerUsuarioPorCorreo(correo).get();
+        return new ResponseEntity<>(usuario, HttpStatus.OK);
     }
 
     /**
@@ -85,16 +81,12 @@ public class UsuarioController {
      *
      * @param correoUsuario Correo del usuario que quiere seguir
      * @param correoSeguir  Correo del usuario a seguir
-     * @return ResponseEntity con estado OK si fue exitoso, UNAUTHORIZED si hubo error
+     * @return ResponseEntity con estado OK si fue exitoso
      */
     @GetMapping("/seguir")
     public ResponseEntity<Void> seguirUsuario(@RequestParam String correoUsuario, @RequestParam String correoSeguir) {
-        try {
-            usuarioService.seguirUsuario(correoUsuario, correoSeguir);
-            return ResponseEntity.ok().build();
-        } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        usuarioService.seguirUsuario(correoUsuario, correoSeguir);
+        return ResponseEntity.ok().build();
     }
 
     /**
@@ -102,16 +94,12 @@ public class UsuarioController {
      *
      * @param correoUsuario   Correo del usuario que quiere dejar de seguir
      * @param correoUnseguir  Correo del usuario a dejar de seguir
-     * @return ResponseEntity con estado OK si fue exitoso, UNAUTHORIZED si hubo error
+     * @return ResponseEntity con estado OK si fue exitoso
      */
     @GetMapping("/unseguir")
     public ResponseEntity<Void> unseguirUsuario(@RequestParam String correoUsuario, @RequestParam String correoUnseguir) {
-        try {
-            usuarioService.unseguirUsuario(correoUsuario, correoUnseguir);
-            return ResponseEntity.ok().build();
-        } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        usuarioService.unseguirUsuario(correoUsuario, correoUnseguir);
+        return ResponseEntity.ok().build();
     }
 
     /**
@@ -131,14 +119,11 @@ public class UsuarioController {
      *
      * @param correo     Correo electrónico del usuario
      * @param contrasena Contraseña del usuario
-     * @return ResponseEntity con el usuario si las credenciales son correctas, UNAUTHORIZED si no
+     * @return ResponseEntity con el usuario si las credenciales son correctas
      */
     @GetMapping("/login")
     public ResponseEntity<Usuario> loginUsuario(@RequestParam String correo, @RequestParam String contrasena) {
-        Optional<Usuario> usuarioOpt = usuarioService.loginUsuario(correo, contrasena);
-        if (usuarioOpt.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-        return new ResponseEntity<>(usuarioOpt.get(), HttpStatus.OK);
+        Usuario usuario = usuarioService.loginUsuario(correo, contrasena);
+        return new ResponseEntity<>(usuario, HttpStatus.OK);
     }
 }

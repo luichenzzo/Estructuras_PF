@@ -71,6 +71,25 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Maneja excepciones de autenticación fallida.
+     *
+     * @param ex      Excepción lanzada
+     * @param request Información de la petición web
+     * @return ResponseEntity con ErrorResponse y código 401
+     */
+    @ExceptionHandler(AutenticacionFallidaException.class)
+    public ResponseEntity<ErrorResponse> manejarAutenticacionFallida(
+            AutenticacionFallidaException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.UNAUTHORIZED.value(),
+                "Unauthorized",
+                ex.getMessage(),
+                request.getDescription(false).replace("uri=", "")
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+    }
+
+    /**
      * Maneja errores internos del servidor.
      *
      * @param ex      Excepción lanzada
