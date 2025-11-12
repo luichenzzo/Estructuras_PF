@@ -12,9 +12,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Controlador para Autocompletado con Trie
- * RF-025: Árbol de Prefijos (Trie)
- * RF-026: Devolver palabras que comiencen con un prefijo
+ * Controlador REST para el sistema de autocompletado basado en Trie.
+ * RF-025: Implementa árbol de prefijos (Trie) para autocompletado eficiente.
+ * RF-026: Devuelve todas las palabras que comiencen con un prefijo dado.
  */
 @RestController
 @RequestMapping("/api/autocompletar")
@@ -24,7 +24,9 @@ public class AutocompletadoController {
     private AutocompletadoService autocompletadoService;
 
     /**
-     * Construye los índices de autocompletado
+     * Construye los índices de autocompletado para canciones, artistas y álbumes.
+     *
+     * @return ResponseEntity con mensaje de confirmación
      */
     @PostMapping("/construir-indices")
     public ResponseEntity<String> construirIndices() {
@@ -33,7 +35,10 @@ public class AutocompletadoController {
     }
 
     /**
-     * RF-003, RF-026: Autocompleta títulos de canciones
+     * Autocompleta títulos de canciones basado en un prefijo.
+     *
+     * @param prefijo Prefijo a buscar
+     * @return ResponseEntity con lista de títulos que comienzan con el prefijo
      */
     @GetMapping("/canciones")
     public ResponseEntity<List<String>> autocompletarCanciones(@RequestParam String prefijo) {
@@ -48,7 +53,10 @@ public class AutocompletadoController {
     }
 
     /**
-     * Autocompleta nombres de artistas
+     * Autocompleta nombres de artistas basado en un prefijo.
+     *
+     * @param prefijo Prefijo a buscar
+     * @return ResponseEntity con lista de nombres que comienzan con el prefijo
      */
     @GetMapping("/artistas")
     public ResponseEntity<List<String>> autocompletarArtistas(@RequestParam String prefijo) {
@@ -63,7 +71,10 @@ public class AutocompletadoController {
     }
 
     /**
-     * Autocompleta nombres de álbumes
+     * Autocompleta nombres de álbumes basado en un prefijo.
+     *
+     * @param prefijo Prefijo a buscar
+     * @return ResponseEntity con lista de nombres que comienzan con el prefijo
      */
     @GetMapping("/albumes")
     public ResponseEntity<List<String>> autocompletarAlbumes(@RequestParam String prefijo) {
@@ -78,7 +89,10 @@ public class AutocompletadoController {
     }
 
     /**
-     * Autocompletado unificado (canciones, artistas y álbumes)
+     * Realiza autocompletado unificado en canciones, artistas y álbumes simultáneamente.
+     *
+     * @param prefijo Prefijo a buscar
+     * @return ResponseEntity con mapa conteniendo resultados por categoría
      */
     @GetMapping("/todo")
     public ResponseEntity<Map<String, List<String>>> autocompletarTodo(@RequestParam String prefijo) {
@@ -87,7 +101,6 @@ public class AutocompletadoController {
 
         Map<String, List<String>> respuesta = new HashMap<>();
 
-        // Convertir ListaEnlazada a List para la respuesta
         List<String> canciones = new ArrayList<>();
         for (String c : resultado.canciones) {
             canciones.add(c);
@@ -99,8 +112,8 @@ public class AutocompletadoController {
         }
 
         List<String> albumes = new ArrayList<>();
-        for (String alb : resultado.albumes) {
-            albumes.add(alb);
+        for (String al : resultado.albumes) {
+            albumes.add(al);
         }
 
         respuesta.put("canciones", canciones);
@@ -109,14 +122,4 @@ public class AutocompletadoController {
 
         return ResponseEntity.ok(respuesta);
     }
-
-    /**
-     * Reconstruye los índices
-     */
-    @PostMapping("/reconstruir")
-    public ResponseEntity<String> reconstruirIndices() {
-        autocompletadoService.reconstruirIndices();
-        return ResponseEntity.ok("Índices reconstruidos exitosamente");
-    }
 }
-

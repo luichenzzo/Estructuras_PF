@@ -9,6 +9,10 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+/**
+ * Entidad que representa un usuario del sistema de música.
+ * Gestiona información personal, favoritos, listas de reproducción y relaciones sociales.
+ */
 @Document(collection = "usuarios")
 @Data
 @NoArgsConstructor

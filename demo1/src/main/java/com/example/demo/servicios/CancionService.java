@@ -20,6 +20,10 @@ import java.util.Optional;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
+/**
+ * Servicio para la gestión de canciones.
+ * Proporciona lógica de negocio para crear, consultar y buscar canciones.
+ */
 @Service
 public class CancionService {
 
@@ -32,7 +36,15 @@ public class CancionService {
     @Autowired
     private AlbumRepository albumRepository;
 
-    // Método 1: Guardar canción usando IDs
+    /**
+     * Guarda una nueva canción utilizando los IDs del artista y álbum.
+     *
+     * @param cancionDTO Datos de la canción incluyendo IDs
+     * @return Canción guardada
+     * @throws DatosInvalidosException Si el título está vacío
+     * @throws ArtistaNoEncontradoException Si el artista no existe
+     * @throws AlbumNoEncontradoException Si el álbum no existe
+     */
     public Cancion guardarCancion(CancionRegistroDTO cancionDTO) {
         // Validar datos
         if (cancionDTO.getTitulo() == null || cancionDTO.getTitulo().trim().isEmpty()) {
@@ -77,7 +89,15 @@ public class CancionService {
         return cancionGuardada;
     }
 
-    // Método 2: Guardar canción usando NOMBRES (más lógico para el front)
+    /**
+     * Guarda una nueva canción utilizando los nombres del artista y álbum.
+     *
+     * @param cancionDTO Datos de la canción incluyendo nombres
+     * @return Canción guardada
+     * @throws DatosInvalidosException Si faltan datos obligatorios
+     * @throws ArtistaNoEncontradoException Si el artista no existe
+     * @throws AlbumNoEncontradoException Si el álbum no existe
+     */
     public Cancion guardarCancionPorNombres(CancionRegistroPorNombreDTO cancionDTO) {
         // Validar datos
         if (cancionDTO.getTitulo() == null || cancionDTO.getTitulo().trim().isEmpty()) {
@@ -132,12 +152,17 @@ public class CancionService {
         return cancionGuardada;
     }
 
+    /**
+     * Obtiene todas las canciones registradas en el sistema.
+     *
+     * @return Lista de todas las canciones
+     */
     public List<Cancion> obtenerCanciones() {
         return cancionRepository.findAll();
     }
 
     /**
-     * Obtiene una canción por su ID
+     * Obtiene una canción por su ID.
      *
      * @param id ID de la canción
      * @return Optional con la canción si existe
@@ -147,9 +172,12 @@ public class CancionService {
     }
 
     /**
-     * RF-004: Búsqueda avanzada con lógica AND/OR
-     * @param busqueda Criterios de búsqueda
+     * Realiza una búsqueda avanzada de canciones con lógica AND/OR.
+     * RF-004: Permite filtrar canciones por artista, género y año.
+     *
+     * @param busqueda Criterios de búsqueda con operador lógico
      * @return Lista de canciones que cumplen los criterios
+     * @throws DatosInvalidosException Si los criterios son nulos
      */
     public List<Cancion> busquedaAvanzada(BusquedaAvanzadaDTO busqueda) {
         if (busqueda == null) {

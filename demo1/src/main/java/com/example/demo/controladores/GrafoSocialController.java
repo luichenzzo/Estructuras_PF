@@ -13,13 +13,13 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Controlador para el Grafo Social de Usuarios
- * RF-023: Grafo No Dirigido
- * RF-024: Algoritmo BFS para amigos de amigos
+ * Controlador REST para el grafo social de usuarios.
+ * RF-023: Implementa grafo no dirigido para conexiones entre usuarios.
+ * RF-024: Utiliza algoritmo BFS para encontrar amigos de amigos.
  */
 @RestController
 @RequestMapping("/api/grafo-social")
-    public class GrafoSocialController {
+public class GrafoSocialController {
 
     @Autowired
     private GrafoSocialService grafoSocialService;
@@ -28,7 +28,11 @@ import java.util.Optional;
     private UsuarioService usuarioService;
 
     /**
-     * Conecta dos usuarios (siguen mutuamente)
+     * Conecta dos usuarios en el grafo social (relación de amistad bidireccional).
+     *
+     * @param usuario1Id ID del primer usuario
+     * @param usuario2Id ID del segundo usuario
+     * @return ResponseEntity con mensaje de confirmación
      */
     @PostMapping("/conectar")
     public ResponseEntity<String> conectarUsuarios(
@@ -40,7 +44,11 @@ import java.util.Optional;
     }
 
     /**
-     * Desconecta dos usuarios
+     * Desconecta dos usuarios en el grafo social.
+     *
+     * @param usuario1Id ID del primer usuario
+     * @param usuario2Id ID del segundo usuario
+     * @return ResponseEntity con mensaje de confirmación
      */
     @PostMapping("/desconectar")
     public ResponseEntity<String> desconectarUsuarios(
@@ -52,7 +60,11 @@ import java.util.Optional;
     }
 
     /**
-     * Verifica si dos usuarios están conectados
+     * Verifica si dos usuarios están conectados directamente en el grafo social.
+     *
+     * @param usuario1Id ID del primer usuario
+     * @param usuario2Id ID del segundo usuario
+     * @return ResponseEntity con true si están conectados, false en caso contrario
      */
     @GetMapping("/estan-conectados")
     public ResponseEntity<Boolean> estanConectados(
@@ -64,7 +76,10 @@ import java.util.Optional;
     }
 
     /**
-     * Obtiene los amigos directos de un usuario
+     * Obtiene la lista de amigos directos de un usuario.
+     *
+     * @param usuarioId ID del usuario
+     * @return ResponseEntity con lista de usuarios amigos
      */
     @GetMapping("/amigos/{usuarioId}")
     public ResponseEntity<List<Usuario>> obtenerAmigos(@PathVariable String usuarioId) {
@@ -80,8 +95,12 @@ import java.util.Optional;
     }
 
     /**
-     * RF-024: Obtiene sugerencias de amigos usando BFS (amigos de amigos)
-     * RF-008: Recibir sugerencias de usuarios a quienes seguir
+     * Obtiene sugerencias de amigos usando BFS (amigos de amigos).
+     * RF-024: Implementa algoritmo BFS para encontrar conexiones indirectas.
+     * RF-008: Proporciona sugerencias de usuarios a quienes seguir.
+     *
+     * @param usuarioId ID del usuario
+     * @return ResponseEntity con lista de usuarios sugeridos
      */
     @GetMapping("/sugerencias/{usuarioId}")
     public ResponseEntity<List<Usuario>> obtenerSugerencias(@PathVariable String usuarioId) {
@@ -97,47 +116,25 @@ import java.util.Optional;
     }
 
     /**
-     * Obtiene amigos a una distancia específica
+     * Obtiene amigos a una distancia específica usando BFS.
+     *
+     * @param usuarioId ID del usuario
+     * @param distancia Distancia en el grafo (ej: 2 para amigos de amigos)
+     * @return ResponseEntity con lista de usuarios a la distancia especificada
      */
-    @GetMapping("/amigos-distancia/{usuarioId}/{distancia}")
+    @GetMapping("/amigos-distancia/{usuarioId}")
     public ResponseEntity<List<Usuario>> obtenerAmigosADistancia(
             @PathVariable String usuarioId,
-            @PathVariable int distancia) {
+            @RequestParam int distancia) {
 
         ListaEnlazada<String> idsAmigos = grafoSocialService.obtenerAmigosADistancia(usuarioId, distancia);
 
-        List<Usuario> usuarios = new ArrayList<>();
+        List<Usuario> amigos = new ArrayList<>();
         for (String id : idsAmigos) {
             Optional<Usuario> usuario = usuarioService.obtenerUsuarioPorId(id);
-            usuario.ifPresent(usuarios::add);
+            usuario.ifPresent(amigos::add);
         }
 
-        return ResponseEntity.ok(usuarios);
-    }
-
-    /**
-     * Obtiene toda la red de un usuario
-     */
-    @GetMapping("/red-completa/{usuarioId}")
-    public ResponseEntity<List<Usuario>> obtenerRedCompleta(@PathVariable String usuarioId) {
-        ListaEnlazada<String> idsRed = grafoSocialService.obtenerRedCompleta(usuarioId);
-
-        List<Usuario> red = new ArrayList<>();
-        for (String id : idsRed) {
-            Optional<Usuario> usuario = usuarioService.obtenerUsuarioPorId(id);
-            usuario.ifPresent(red::add);
-        }
-
-        return ResponseEntity.ok(red);
-    }
-
-    /**
-     * Reconstruye el grafo social desde la base de datos
-     */
-    @PostMapping("/reconstruir")
-    public ResponseEntity<String> reconstruirGrafo() {
-        grafoSocialService.reconstruirGrafoSocial();
-        return ResponseEntity.ok("Grafo social reconstruido exitosamente");
+        return ResponseEntity.ok(amigos);
     }
 }
-

@@ -13,9 +13,9 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Controlador para el Grafo de Similitud de Canciones
- * RF-021: Grafo Ponderado No Dirigido
- * RF-022: Algoritmo Dijkstra
+ * Controlador REST para el grafo de similitud de canciones.
+ * RF-021: Implementa grafo ponderado no dirigido para similitud entre canciones.
+ * RF-022: Utiliza algoritmo de Dijkstra para encontrar rutas de máxima similitud.
  */
 @RestController
 @RequestMapping("/api/grafo-similitud")
@@ -28,7 +28,9 @@ public class GrafoSimilitudController {
     private CancionService cancionService;
 
     /**
-     * Construye el grafo de similitud
+     * Construye el grafo de similitud analizando todas las canciones del sistema.
+     *
+     * @return ResponseEntity con mensaje de confirmación
      */
     @PostMapping("/construir")
     public ResponseEntity<String> construirGrafo() {
@@ -37,7 +39,10 @@ public class GrafoSimilitudController {
     }
 
     /**
-     * Obtiene canciones similares a una canción dada
+     * Obtiene canciones similares a una canción específica.
+     *
+     * @param cancionId ID de la canción de referencia
+     * @return ResponseEntity con lista de canciones similares
      */
     @GetMapping("/similares/{cancionId}")
     public ResponseEntity<List<Cancion>> obtenerCancionesSimilares(@PathVariable String cancionId) {
@@ -53,7 +58,12 @@ public class GrafoSimilitudController {
     }
 
     /**
-     * RF-022: Encuentra la ruta de mayor similitud entre dos canciones usando Dijkstra
+     * Encuentra la ruta de mayor similitud entre dos canciones usando el algoritmo de Dijkstra.
+     * RF-022: Implementa Dijkstra para encontrar el camino óptimo de similitud.
+     *
+     * @param origenId  ID de la canción origen
+     * @param destinoId ID de la canción destino
+     * @return ResponseEntity con la secuencia de canciones en la ruta
      */
     @GetMapping("/ruta-similitud/{origenId}/{destinoId}")
     public ResponseEntity<List<Cancion>> encontrarRutaSimilitud(
@@ -72,7 +82,12 @@ public class GrafoSimilitudController {
     }
 
     /**
-     * RF-006: Genera una "Radio" - cola de reproducción con canciones similares
+     * Genera una "Radio" - cola de reproducción con canciones similares.
+     * RF-006: Crea una cola de reproducción basada en similitud musical.
+     *
+     * @param cancionId ID de la canción inicial
+     * @param cantidad  Número de canciones a incluir en la radio (por defecto 20)
+     * @return ResponseEntity con la cola de reproducción generada
      */
     @GetMapping("/generar-radio/{cancionId}")
     public ResponseEntity<List<Cancion>> generarRadio(
@@ -91,7 +106,10 @@ public class GrafoSimilitudController {
     }
 
     /**
-     * Reconstruye el grafo
+     * Reconstruye completamente el grafo de similitud.
+     * Útil cuando se agregan o eliminan canciones del sistema.
+     *
+     * @return ResponseEntity con mensaje de confirmación
      */
     @PostMapping("/reconstruir")
     public ResponseEntity<String> reconstruirGrafo() {
@@ -99,4 +117,3 @@ public class GrafoSimilitudController {
         return ResponseEntity.ok("Grafo de similitud reconstruido exitosamente");
     }
 }
-

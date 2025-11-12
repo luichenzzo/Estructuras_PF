@@ -5,7 +5,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 /**
- * Componente de inicialización para construir los grafos al iniciar la aplicación
+ * Componente de inicialización para construir estructuras de datos al arrancar la aplicación.
+ * Ejecuta automáticamente la construcción de grafos e índices al iniciar Spring Boot.
  */
 @Component
 public class InicializadorGrafos implements CommandLineRunner {
@@ -19,6 +20,13 @@ public class InicializadorGrafos implements CommandLineRunner {
     @Autowired
     private AutocompletadoService autocompletadoService;
 
+    /**
+     * Método ejecutado al inicio de la aplicación.
+     * Construye el grafo social, el grafo de similitud de canciones y los índices de autocompletado.
+     *
+     * @param args Argumentos de línea de comandos
+     * @throws Exception Si ocurre algún error durante la inicialización
+     */
     @Override
     public void run(String... args) throws Exception {
         System.out.println("===========================================");
@@ -51,4 +59,3 @@ public class InicializadorGrafos implements CommandLineRunner {
         }
     }
 }
-

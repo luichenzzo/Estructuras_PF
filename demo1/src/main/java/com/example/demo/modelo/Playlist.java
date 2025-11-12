@@ -9,17 +9,25 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 
+/**
+ * Entidad que representa una lista de reproducción (playlist).
+ * Contiene canciones organizadas por un usuario creador y puede tener seguidores.
+ */
 @Document(collection = "playlists")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Playlist {
+
     @Id
     private String id;
+
     private String nombre;
+
     private ListaEnlazada<Cancion> canciones;
+
     @DBRef
     private Usuario creador;
-    private ListaDoblementeEnlazada<Usuario> seguidores;
 
+    private ListaDoblementeEnlazada<Usuario> seguidores;
 }

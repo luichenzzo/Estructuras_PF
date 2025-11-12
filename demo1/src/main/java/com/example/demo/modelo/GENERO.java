@@ -1,5 +1,9 @@
 package com.example.demo.modelo;
 
+/**
+ * Enumeración de géneros musicales disponibles en el sistema.
+ * Define los géneros que pueden ser asignados a canciones, álbumes y artistas.
+ */
 public enum GENERO {
 
     POP,

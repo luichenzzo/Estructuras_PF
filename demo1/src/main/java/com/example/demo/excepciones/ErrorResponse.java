@@ -3,7 +3,8 @@ package com.example.demo.excepciones;
 import java.time.LocalDateTime;
 
 /**
- * Clase para encapsular la respuesta de error en formato JSON
+ * Clase para encapsular la respuesta de error en formato JSON.
+ * Proporciona información detallada sobre errores ocurridos en la aplicación.
  */
 public class ErrorResponse {
     private LocalDateTime timestamp;
@@ -12,10 +13,21 @@ public class ErrorResponse {
     private String mensaje;
     private String path;
 
+    /**
+     * Constructor por defecto que inicializa el timestamp con la hora actual.
+     */
     public ErrorResponse() {
         this.timestamp = LocalDateTime.now();
     }
 
+    /**
+     * Constructor completo para crear una respuesta de error.
+     *
+     * @param status  Código de estado HTTP
+     * @param error   Tipo de error
+     * @param mensaje Mensaje descriptivo del error
+     * @param path    Ruta donde ocurrió el error
+     */
     public ErrorResponse(int status, String error, String mensaje, String path) {
         this.timestamp = LocalDateTime.now();
         this.status = status;
@@ -65,4 +77,3 @@ public class ErrorResponse {
         this.path = path;
     }
 }
-

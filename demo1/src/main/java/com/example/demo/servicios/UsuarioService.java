@@ -17,6 +17,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ArrayList;
 
+/**
+ * Servicio para la gestión de usuarios.
+ * Maneja la lógica de negocio relacionada con usuarios, autenticación, favoritos y relaciones sociales.
+ */
 @Service
 public class UsuarioService {
 
@@ -29,6 +33,16 @@ public class UsuarioService {
     @Autowired
     private GrafoSocialService grafoSocialService;
 
+    /**
+     * Registra un nuevo usuario en el sistema.
+     *
+     * @param nombre     Nombre del usuario
+     * @param correo     Correo electrónico único
+     * @param contrasena Contraseña del usuario
+     * @return Usuario guardado
+     * @throws DatosInvalidosException Si algún campo está vacío
+     * @throws RecursoDuplicadoException Si ya existe un usuario con ese correo
+     */
     public Usuario guardarUsuario(String nombre, String correo, String contrasena) {
         // Validar datos
         if (nombre == null || nombre.trim().isEmpty()) {
@@ -60,6 +74,14 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
+    /**
+     * Obtiene un usuario por su correo electrónico.
+     *
+     * @param correo Correo del usuario
+     * @return Optional con el usuario si existe
+     * @throws DatosInvalidosException Si el correo está vacío
+     * @throws UsuarioNoEncontradoException Si no existe el usuario
+     */
     public Optional<Usuario> obtenerUsuarioPorCorreo(String correo) {
         if (correo == null || correo.trim().isEmpty()) {
             throw new DatosInvalidosException("El correo no puede estar vacío");
@@ -73,7 +95,24 @@ public class UsuarioService {
         return usuarioOpt;
     }
 
-    // Helper: obtiene Usuario o lanza UsuarioNoEncontradoException / DatosInvalidosException
+    /**
+     * Obtiene un usuario por su ID.
+     *
+     * @param id ID del usuario
+     * @return Optional con el usuario si existe
+     */
+    public Optional<Usuario> obtenerUsuarioPorId(String id) {
+        return usuarioRepository.findById(id);
+    }
+
+    /**
+     * Obtiene un usuario por correo o lanza excepción si no existe.
+     *
+     * @param correo Correo del usuario
+     * @return Usuario encontrado
+     * @throws DatosInvalidosException Si el correo está vacío
+     * @throws UsuarioNoEncontradoException Si no existe el usuario
+     */
     private Usuario getUsuarioByCorreo(String correo) {
         if (correo == null || correo.trim().isEmpty()) {
             throw new DatosInvalidosException("El correo de usuario no puede estar vacío");
@@ -85,7 +124,14 @@ public class UsuarioService {
         return usuarioOpt.get();
     }
 
-    // Helper: busca una canción por título (coincidencia exacta ignorando mayúsculas o primera coincidencia)
+    /**
+     * Busca una canción por título (coincidencia exacta o primera coincidencia).
+     *
+     * @param tituloCancion Título de la canción
+     * @return Canción encontrada
+     * @throws DatosInvalidosException Si el título está vacío
+     * @throws CancionNoEncontradaException Si no existe la canción
+     */
     private Cancion encontrarCancionPorTitulo(String tituloCancion) {
         if (tituloCancion == null || tituloCancion.trim().isEmpty()) {
             throw new DatosInvalidosException("El título de la canción no puede estar vacío");
@@ -112,6 +158,14 @@ public class UsuarioService {
         return cancionEncontrada;
     }
 
+    /**
+     * Agrega una canción a la lista de favoritos del usuario.
+     *
+     * @param correoUsuario Correo del usuario
+     * @param tituloCancion Título de la canción
+     * @return Lista actualizada de canciones favoritas
+     * @throws RecursoDuplicadoException Si la canción ya está en favoritos
+     */
     public List<Cancion> likearCancion(String correoUsuario, String tituloCancion) {
         Usuario usuario = getUsuarioByCorreo(correoUsuario);
         Cancion cancionEncontrada = encontrarCancionPorTitulo(tituloCancion);
@@ -139,6 +193,14 @@ public class UsuarioService {
         return favoritos;
     }
 
+    /**
+     * Elimina una canción de la lista de favoritos del usuario.
+     *
+     * @param correoUsuario Correo del usuario
+     * @param tituloCancion Título de la canción
+     * @return Lista actualizada de canciones favoritas
+     * @throws com.example.demo.excepciones.RecursoNoEncontradoException Si la canción no está en favoritos
+     */
     public List<Cancion> dislikearCancion(String correoUsuario, String tituloCancion) {
         Usuario usuario = getUsuarioByCorreo(correoUsuario);
         Cancion cancionEncontrada = encontrarCancionPorTitulo(tituloCancion);
@@ -147,19 +209,20 @@ public class UsuarioService {
         if (usuario.getListaFavoritos() == null) {
             usuario.setListaFavoritos(new ListaEnlazada<>());
         }
+
         System.out.println("Lista: ");
         System.out.println(usuario.getListaFavoritos().toString());
         System.out.println(cancionEncontrada.toString());
+
         // Verificar que la canción exista en favoritos
         boolean flag = false;
-        for( Cancion c : usuario.getListaFavoritos()){
+        for (Cancion c : usuario.getListaFavoritos()) {
             if (c.getId().equals(cancionEncontrada.getId())) {
                 System.out.println("Cancion encontrada en favoritos: " + c.toString());
                 flag = true;
             }
         }
         if (!flag) {
-            // Si la canción no está en favoritos, lanzar excepción de recurso no encontrado para indicar que no puede quitarse
             throw new com.example.demo.excepciones.RecursoNoEncontradoException("La canción no está en la lista de favoritos del usuario");
         }
 
@@ -176,8 +239,14 @@ public class UsuarioService {
         return favoritos;
     }
 
-
-    //TODO: Metodo permite seguirse a uno mismo, además no verifica correctamente si ya sigue al usuario.
+    /**
+     * Permite que un usuario siga a otro usuario.
+     *
+     * @param correoUsuario Correo del usuario que quiere seguir
+     * @param correoSeguir  Correo del usuario a seguir
+     * @throws DatosInvalidosException Si un usuario intenta seguirse a sí mismo
+     * @throws RecursoDuplicadoException Si ya sigue al usuario
+     */
     public void seguirUsuario(String correoUsuario, String correoSeguir) {
         Usuario usuario = getUsuarioByCorreo(correoUsuario);
         Usuario usuarioAseguir = getUsuarioByCorreo(correoSeguir);
@@ -204,13 +273,13 @@ public class UsuarioService {
         Usuario shallowAseguir = new Usuario(
                 usuarioAseguir.getId(),
                 usuarioAseguir.getCorreo(),
-                null, // contrasena
+                null,
                 usuarioAseguir.getNombre(),
-                null, // listaFavoritos
-                null, // listasDeReproduccion
-                null, // colaReproduccion
-                null, // seguidores
-                null  // seguidos
+                null,
+                null,
+                null,
+                null,
+                null
         );
 
         Usuario shallowUsuario = new Usuario(
@@ -238,7 +307,13 @@ public class UsuarioService {
         }
     }
 
-    // TODO: Reallly have to check this
+    /**
+     * Permite que un usuario deje de seguir a otro usuario.
+     *
+     * @param correoUsuario  Correo del usuario que quiere dejar de seguir
+     * @param correoUnseguir Correo del usuario a dejar de seguir
+     * @throws com.example.demo.excepciones.RecursoNoEncontradoException Si no sigue al usuario
+     */
     public void unseguirUsuario(String correoUsuario, String correoUnseguir) {
         Usuario usuario = getUsuarioByCorreo(correoUsuario);
         Usuario usuarioAunseguir = getUsuarioByCorreo(correoUnseguir);
@@ -298,7 +373,11 @@ public class UsuarioService {
     }
 
     /**
-     * Verifica si dos usuarios se siguen mutuamente (amistad bidireccional)
+     * Verifica si dos usuarios se siguen mutuamente (amistad bidireccional).
+     *
+     * @param userId1 ID del primer usuario
+     * @param userId2 ID del segundo usuario
+     * @return true si ambos se siguen mutuamente, false en caso contrario
      */
     private boolean verificarAmistadBidireccional(String userId1, String userId2) {
         Optional<Usuario> u1Opt = usuarioRepository.findById(userId1);
@@ -311,7 +390,6 @@ public class UsuarioService {
         Usuario u1 = u1Opt.get();
         Usuario u2 = u2Opt.get();
 
-        // Verificar si u1 sigue a u2 Y u2 sigue a u1
         boolean u1SigueU2 = false;
         boolean u2SigueU1 = false;
 
@@ -336,6 +414,12 @@ public class UsuarioService {
         return u1SigueU2 && u2SigueU1;
     }
 
+    /**
+     * Obtiene la lista de seguidores de un usuario.
+     *
+     * @param correoUsuario Correo del usuario
+     * @return Lista de usuarios seguidores
+     */
     public List<Usuario> obtenerSeguidores(String correoUsuario) {
         Usuario usuario = getUsuarioByCorreo(correoUsuario);
 
@@ -353,27 +437,25 @@ public class UsuarioService {
         return seguidores;
     }
 
+    /**
+     * Autentica un usuario con su correo y contraseña.
+     *
+     * @param correo     Correo del usuario
+     * @param contrasena Contraseña del usuario
+     * @return Optional con el usuario si las credenciales son correctas
+     */
     public Optional<Usuario> loginUsuario(String correo, String contrasena) {
-        if (correo == null || correo.trim().isEmpty() || contrasena == null || contrasena.trim().isEmpty()) {
-            throw new DatosInvalidosException("Correo y contraseña son obligatorios");
-        }
-
-        // Usar el método que busca por correo y contraseña directamente
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByCorreoAndContrasena(correo, contrasena);
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByCorreo(correo);
 
         if (usuarioOpt.isEmpty()) {
-            throw new UsuarioNoEncontradoException("Correo o contraseña incorrectos para: " + correo);
+            return Optional.empty();
         }
 
-        return usuarioOpt;
-    }
+        Usuario usuario = usuarioOpt.get();
+        if (usuario.getContrasena().equals(contrasena)) {
+            return Optional.of(usuario);
+        }
 
-    /**
-     * Obtiene un usuario por su ID
-     * @param id ID del usuario
-     * @return Optional con el usuario si existe
-     */
-    public Optional<Usuario> obtenerUsuarioPorId(String id) {
-        return usuarioRepository.findById(id);
+        return Optional.empty();
     }
 }

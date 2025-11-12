@@ -17,6 +17,10 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Servicio para la gestión de álbumes musicales.
+ * Proporciona lógica de negocio para crear y consultar álbumes.
+ */
 @Service
 public class AlbumService {
 
@@ -26,7 +30,14 @@ public class AlbumService {
     @Autowired
     private ArtistaRepository artistaRepository;
 
-    // Método original: guardar álbum usando el ID del artista
+    /**
+     * Guarda un nuevo álbum utilizando el ID del artista.
+     *
+     * @param albumDTO Datos del álbum incluyendo ID del artista
+     * @return Álbum guardado
+     * @throws DatosInvalidosException Si el título del álbum está vacío
+     * @throws ArtistaNoEncontradoException Si el artista no existe
+     */
     public Album guardarAlbum(AlbumRegistroDTO albumDTO) {
         // Validar datos
         if (albumDTO.getTitulo() == null || albumDTO.getTitulo().trim().isEmpty()) {
@@ -61,7 +72,14 @@ public class AlbumService {
         return albumGuardado;
     }
 
-    // Nuevo método: guardar álbum usando el NOMBRE del artista
+    /**
+     * Guarda un nuevo álbum utilizando el nombre del artista en lugar del ID.
+     *
+     * @param albumDTO Datos del álbum incluyendo nombre del artista
+     * @return Álbum guardado
+     * @throws DatosInvalidosException Si faltan datos obligatorios
+     * @throws ArtistaNoEncontradoException Si el artista no existe
+     */
     public Album guardarAlbumPorNombreArtista(AlbumRegistroPorNombreDTO albumDTO) {
         // Validar datos
         if (albumDTO.getTitulo() == null || albumDTO.getTitulo().trim().isEmpty()) {
@@ -99,12 +117,23 @@ public class AlbumService {
         return albumGuardado;
     }
 
+    /**
+     * Obtiene todos los álbumes registrados en el sistema.
+     *
+     * @return Lista de todos los álbumes
+     */
     public List<Album> obtenerAlbumes() {
         return albumRepository.findAll();
-
     }
 
-    // java
+    /**
+     * Busca un álbum por su nombre.
+     *
+     * @param nombre Nombre del álbum a buscar
+     * @return Optional con el álbum encontrado
+     * @throws DatosInvalidosException Si el nombre está vacío
+     * @throws AlbumNoEncontradoException Si no se encuentra el álbum
+     */
     public Optional<Album> obtenerAlbumPorNombre(String nombre) {
         if (nombre == null || nombre.trim().isEmpty()) {
             throw new DatosInvalidosException("El nombre del álbum no puede estar vacío");

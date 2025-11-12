@@ -5,6 +5,10 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+/**
+ * Entidad que representa un administrador del sistema.
+ * Extiende de Usuario con privilegios administrativos adicionales.
+ */
 @Document(collection = "administradores")
 @Data
 @NoArgsConstructor
