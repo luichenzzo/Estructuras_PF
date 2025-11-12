@@ -3,12 +3,14 @@ package com.example.demo.controladores;
 import com.example.demo.dto.BusquedaAvanzadaDTO;
 import com.example.demo.dto.CancionRegistroDTO;
 import com.example.demo.dto.CancionRegistroPorNombreDTO;
+import com.example.demo.dto.CargaMasivaResultadoDTO;
 import com.example.demo.modelo.Cancion;
 import com.example.demo.servicios.CancionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -69,5 +71,19 @@ public class CancionController {
     public ResponseEntity<List<Cancion>> busquedaAvanzada(@RequestBody BusquedaAvanzadaDTO busqueda) {
         List<Cancion> resultados = cancionService.busquedaAvanzada(busqueda);
         return new ResponseEntity<>(resultados, HttpStatus.OK);
+    }
+
+    /**
+     * Carga masiva de canciones desde un archivo CSV.
+     * Formato esperado del CSV: Titulo,NombreArtista,TituloAlbum,Genero,Anio,Duracion,URLCancion
+     *
+     * @param archivo Archivo CSV con las canciones
+     * @return ResponseEntity con el resultado de la carga masiva
+     */
+    @PostMapping("/carga-masiva")
+    public ResponseEntity<CargaMasivaResultadoDTO> cargarCancionesDesdeCSV(
+            @RequestParam("archivo") MultipartFile archivo) {
+        CargaMasivaResultadoDTO resultado = cancionService.cargarCancionesDesdeCSV(archivo);
+        return new ResponseEntity<>(resultado, HttpStatus.OK);
     }
 }

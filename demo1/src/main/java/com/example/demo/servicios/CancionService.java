@@ -3,9 +3,11 @@ package com.example.demo.servicios;
 import com.example.demo.dto.CancionRegistroDTO;
 import com.example.demo.dto.CancionRegistroPorNombreDTO;
 import com.example.demo.dto.BusquedaAvanzadaDTO;
+import com.example.demo.dto.CargaMasivaResultadoDTO;
 import com.example.demo.modelo.Album;
 import com.example.demo.modelo.Artista;
 import com.example.demo.modelo.Cancion;
+import com.example.demo.modelo.GENERO;
 import com.example.demo.repositorio.AlbumRepository;
 import com.example.demo.repositorio.ArtistaRepository;
 import com.example.demo.repositorio.CancionRepository;
@@ -14,7 +16,11 @@ import com.example.demo.excepciones.AlbumNoEncontradoException;
 import com.example.demo.excepciones.DatosInvalidosException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.ArrayList;
@@ -231,5 +237,150 @@ public class CancionService {
                 })
                 .collect(Collectors.toList());
         }
+    }
+
+    /**
+     * Carga masiva de canciones desde un archivo CSV.
+     * Formato esperado del CSV: Titulo,NombreArtista,TituloAlbum,Genero,Anio,Duracion,URLCancion
+     *
+     * @param archivo Archivo CSV con las canciones
+     * @return Resultado de la carga masiva con estadísticas y errores
+     * @throws DatosInvalidosException Si el archivo está vacío o tiene formato incorrecto
+     */
+    public CargaMasivaResultadoDTO cargarCancionesDesdeCSV(MultipartFile archivo) {
+        CargaMasivaResultadoDTO resultado = new CargaMasivaResultadoDTO();
+
+        if (archivo == null || archivo.isEmpty()) {
+            throw new DatosInvalidosException("El archivo CSV no puede estar vacío");
+        }
+
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(archivo.getInputStream(), StandardCharsets.UTF_8))) {
+
+            String linea;
+            int numeroLinea = 0;
+            boolean esPrimeraLinea = true;
+
+            while ((linea = reader.readLine()) != null) {
+                numeroLinea++;
+
+                // Saltar la línea de encabezados
+                if (esPrimeraLinea) {
+                    esPrimeraLinea = false;
+                    continue;
+                }
+
+                // Saltar líneas vacías
+                if (linea.trim().isEmpty()) {
+                    continue;
+                }
+
+                resultado.setTotalProcesadas(resultado.getTotalProcesadas() + 1);
+
+                try {
+                    // Parsear la línea CSV (considerando valores entre comillas)
+                    String[] valores = parsearLineaCSV(linea);
+
+                    if (valores.length < 7) {
+                        resultado.agregarError(numeroLinea, "Formato incorrecto. Se esperan 7 columnas");
+                        resultado.setFallidas(resultado.getFallidas() + 1);
+                        continue;
+                    }
+
+                    // Crear DTO con los datos del CSV
+                    CancionRegistroPorNombreDTO cancionDTO = new CancionRegistroPorNombreDTO();
+                    cancionDTO.setTitulo(valores[0].trim());
+                    cancionDTO.setNombreArtista(valores[1].trim());
+                    cancionDTO.setTituloAlbum(valores[2].trim());
+
+                    // Parsear género
+                    try {
+                        cancionDTO.setGenero(GENERO.valueOf(valores[3].trim().toUpperCase()));
+                    } catch (IllegalArgumentException e) {
+                        resultado.agregarError(numeroLinea, "Género inválido: " + valores[3]);
+                        resultado.setFallidas(resultado.getFallidas() + 1);
+                        continue;
+                    }
+
+                    // Parsear año
+                    try {
+                        cancionDTO.setAnio(Integer.parseInt(valores[4].trim()));
+                    } catch (NumberFormatException e) {
+                        resultado.agregarError(numeroLinea, "Año inválido: " + valores[4]);
+                        resultado.setFallidas(resultado.getFallidas() + 1);
+                        continue;
+                    }
+
+                    // Parsear duración
+                    try {
+                        cancionDTO.setDuracion(Double.parseDouble(valores[5].trim()));
+                    } catch (NumberFormatException e) {
+                        resultado.agregarError(numeroLinea, "Duración inválida: " + valores[5]);
+                        resultado.setFallidas(resultado.getFallidas() + 1);
+                        continue;
+                    }
+
+                    cancionDTO.setURLCancion(valores[6].trim());
+
+                    // Intentar guardar la canción
+                    guardarCancionPorNombres(cancionDTO);
+                    resultado.setExitosas(resultado.getExitosas() + 1);
+
+                } catch (ArtistaNoEncontradoException e) {
+                    resultado.agregarError(numeroLinea, "Artista no encontrado: " + e.getMessage());
+                    resultado.setFallidas(resultado.getFallidas() + 1);
+                } catch (AlbumNoEncontradoException e) {
+                    resultado.agregarError(numeroLinea, "Álbum no encontrado: " + e.getMessage());
+                    resultado.setFallidas(resultado.getFallidas() + 1);
+                } catch (DatosInvalidosException e) {
+                    resultado.agregarError(numeroLinea, e.getMessage());
+                    resultado.setFallidas(resultado.getFallidas() + 1);
+                } catch (Exception e) {
+                    resultado.agregarError(numeroLinea, "Error inesperado: " + e.getMessage());
+                    resultado.setFallidas(resultado.getFallidas() + 1);
+                }
+            }
+
+        } catch (Exception e) {
+            throw new DatosInvalidosException("Error al procesar el archivo CSV: " + e.getMessage());
+        }
+
+        return resultado;
+    }
+
+    /**
+     * Parsea una línea CSV manejando valores entre comillas.
+     *
+     * @param linea Línea del CSV
+     * @return Array con los valores parseados
+     */
+    private String[] parsearLineaCSV(String linea) {
+        List<String> valores = new ArrayList<>();
+        StringBuilder valorActual = new StringBuilder();
+        boolean dentroDeComillas = false;
+
+        for (int i = 0; i < linea.length(); i++) {
+            char c = linea.charAt(i);
+
+            if (c == '"') {
+                // Manejar comillas dobles escapadas
+                if (i + 1 < linea.length() && linea.charAt(i + 1) == '"') {
+                    valorActual.append('"');
+                    i++; // Saltar la siguiente comilla
+                } else {
+                    dentroDeComillas = !dentroDeComillas;
+                }
+            } else if (c == ',' && !dentroDeComillas) {
+                valores.add(valorActual.toString());
+                valorActual = new StringBuilder();
+            } else {
+                valorActual.append(c);
+            }
+        }
+
+        // Agregar el último valor
+        valores.add(valorActual.toString());
+
+        return valores.toArray(new String[0]);
     }
 }
