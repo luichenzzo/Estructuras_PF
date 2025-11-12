@@ -44,8 +44,11 @@ public class GeneralController {
         String csvContent = generalService.generarReporteCSV(correoUsuario);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType("text/csv"));
-        headers.setContentDispositionFormData("attachment", "favoritos.csv");
+        headers.setContentType(new MediaType("text", "csv", java.nio.charset.StandardCharsets.UTF_8));
+        headers.setContentDispositionFormData("attachment", "canciones_favoritas_" + correoUsuario.split("@")[0] + ".csv");
+        headers.setCacheControl("no-cache, no-store, must-revalidate");
+        headers.setPragma("no-cache");
+        headers.setExpires(0);
 
         return new ResponseEntity<>(csvContent, headers, HttpStatus.OK);
     }
