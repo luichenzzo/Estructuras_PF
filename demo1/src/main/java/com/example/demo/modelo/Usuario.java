@@ -2,6 +2,7 @@ package com.example.demo.modelo;
 
 import com.example.demo.estructuras.Cola;
 import com.example.demo.estructuras.ListaEnlazada;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -26,8 +27,13 @@ public class Usuario {
     private String contrasena;
     private String nombre;
     private ListaEnlazada<Cancion> listaFavoritos;
+    
+    @JsonIgnore
     private ListaEnlazada<Playlist> listasDeReproduccion;
+    
+    @JsonIgnore
     private Cola<Cancion> colaReproduccion;
+    
     private ListaEnlazada <Usuario> seguidores;
     private ListaEnlazada <Usuario> seguidos;
 

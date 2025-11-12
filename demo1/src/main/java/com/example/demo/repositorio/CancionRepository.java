@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CancionRepository extends MongoRepository<Cancion, String> {
@@ -21,5 +22,7 @@ public interface CancionRepository extends MongoRepository<Cancion, String> {
     List<Cancion> findByAnio(int anio);
 
     List<Cancion> findByTituloContainingIgnoreCase(String titulo);
+    
+    Optional<Cancion> findByTitulo(String titulo);
 }
 
