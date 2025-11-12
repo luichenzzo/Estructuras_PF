@@ -2,6 +2,7 @@ package com.example.demo.servicios;
 
 import com.example.demo.dto.CancionRegistroDTO;
 import com.example.demo.dto.CancionRegistroPorNombreDTO;
+import com.example.demo.dto.BusquedaAvanzadaDTO;
 import com.example.demo.modelo.Album;
 import com.example.demo.modelo.Artista;
 import com.example.demo.modelo.Cancion;
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 @Service
 public class CancionService {
@@ -141,5 +144,64 @@ public class CancionService {
      */
     public Optional<Cancion> obtenerCancionPorId(String id) {
         return cancionRepository.findById(id);
+    }
+
+    /**
+     * RF-004: Búsqueda avanzada con lógica AND/OR
+     * @param busqueda Criterios de búsqueda
+     * @return Lista de canciones que cumplen los criterios
+     */
+    public List<Cancion> busquedaAvanzada(BusquedaAvanzadaDTO busqueda) {
+        if (busqueda == null) {
+            throw new DatosInvalidosException("Los criterios de búsqueda no pueden estar vacíos");
+        }
+
+        List<Cancion> todasLasCanciones = cancionRepository.findAll();
+        String operador = busqueda.getOperadorLogico() != null ?
+            busqueda.getOperadorLogico().toUpperCase() : "AND";
+
+        if ("OR".equals(operador)) {
+            // Lógica OR: la canción cumple al menos UN criterio
+            return todasLasCanciones.stream()
+                .filter(cancion -> {
+                    boolean cumpleArtista = busqueda.getArtista() == null ||
+                        busqueda.getArtista().trim().isEmpty() ||
+                        (cancion.getArtista() != null &&
+                         cancion.getArtista().getNombre().toLowerCase()
+                            .contains(busqueda.getArtista().toLowerCase()));
+
+                    boolean cumpleGenero = busqueda.getGenero() == null ||
+                        busqueda.getGenero().trim().isEmpty() ||
+                        (cancion.getGenero() != null &&
+                         cancion.getGenero().toString().equalsIgnoreCase(busqueda.getGenero()));
+
+                    boolean cumpleAnio = busqueda.getAnio() == null ||
+                        cancion.getAnio() == busqueda.getAnio();
+
+                    return cumpleArtista || cumpleGenero || cumpleAnio;
+                })
+                .collect(Collectors.toList());
+        } else {
+            // Lógica AND (por defecto): la canción cumple TODOS los criterios especificados
+            return todasLasCanciones.stream()
+                .filter(cancion -> {
+                    boolean cumpleArtista = busqueda.getArtista() == null ||
+                        busqueda.getArtista().trim().isEmpty() ||
+                        (cancion.getArtista() != null &&
+                         cancion.getArtista().getNombre().toLowerCase()
+                            .contains(busqueda.getArtista().toLowerCase()));
+
+                    boolean cumpleGenero = busqueda.getGenero() == null ||
+                        busqueda.getGenero().trim().isEmpty() ||
+                        (cancion.getGenero() != null &&
+                         cancion.getGenero().toString().equalsIgnoreCase(busqueda.getGenero()));
+
+                    boolean cumpleAnio = busqueda.getAnio() == null ||
+                        cancion.getAnio() == busqueda.getAnio();
+
+                    return cumpleArtista && cumpleGenero && cumpleAnio;
+                })
+                .collect(Collectors.toList());
+        }
     }
 }

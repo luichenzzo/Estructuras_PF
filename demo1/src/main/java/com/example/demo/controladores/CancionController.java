@@ -1,5 +1,6 @@
 package com.example.demo.controladores;
 
+import com.example.demo.dto.BusquedaAvanzadaDTO;
 import com.example.demo.dto.CancionRegistroDTO;
 import com.example.demo.dto.CancionRegistroPorNombreDTO;
 import com.example.demo.modelo.Cancion;
@@ -36,5 +37,14 @@ public class CancionController {
     public ResponseEntity<List<Cancion>> obtenerCanciones() {
         List<Cancion> canciones = cancionService.obtenerCanciones();
         return new ResponseEntity<>(canciones, HttpStatus.OK);
+    }
+
+    /**
+     * RF-004: Búsqueda avanzada de canciones con lógica AND/OR
+     */
+    @PostMapping("/busqueda-avanzada")
+    public ResponseEntity<List<Cancion>> busquedaAvanzada(@RequestBody BusquedaAvanzadaDTO busqueda) {
+        List<Cancion> resultados = cancionService.busquedaAvanzada(busqueda);
+        return new ResponseEntity<>(resultados, HttpStatus.OK);
     }
 }
