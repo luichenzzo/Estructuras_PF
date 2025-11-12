@@ -1,6 +1,7 @@
 package com.example.demo.modelo;
 
 import com.example.demo.estructuras.ListaEnlazada;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -32,5 +33,6 @@ public class Album {
 
     private String URLPortadaAlbum;
 
+    @JsonIgnore
     private ListaEnlazada<Cancion> canciones;
 }
