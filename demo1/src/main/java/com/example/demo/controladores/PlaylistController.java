@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Controlador REST para gestionar playlists
@@ -33,6 +35,42 @@ public class PlaylistController {
 
     @Autowired
     private CancionRepository cancionRepository;
+
+    // Helper: convertir una Playlist a un DTO simple (Map) para evitar serializar estructuras personalizadas
+    private Map<String, Object> playlistToDto(Playlist p) {
+        if (p == null) return null;
+        Map<String, Object> dto = new HashMap<>();
+        dto.put("id", p.getId());
+        dto.put("nombre", p.getNombre());
+        dto.put("correoCreador", p.getCreador() != null ? p.getCreador().getCorreo() : null);
+
+        List<Map<String, Object>> canciones = new ArrayList<>();
+        ListaEnlazada<Cancion> listaCanciones = p.getCanciones();
+        if (listaCanciones != null) {
+            for (int i = 0; i < listaCanciones.tamanio(); i++) {
+                Cancion c = listaCanciones.obtener(i);
+                if (c != null) {
+                    Map<String, Object> cDto = new HashMap<>();
+                    cDto.put("id", c.getId());
+                    cDto.put("titulo", c.getTitulo());
+                    canciones.add(cDto);
+                }
+            }
+        }
+        dto.put("canciones", canciones);
+
+        List<String> seguidores = new ArrayList<>();
+        ListaDoblementeEnlazada<Usuario> listaSeguidores = p.getSeguidores();
+        if (listaSeguidores != null) {
+            for (int i = 0; i < listaSeguidores.tamanio(); i++) {
+                Usuario u = listaSeguidores.obtener(i);
+                if (u != null) seguidores.add(u.getCorreo());
+            }
+        }
+        dto.put("seguidores", seguidores);
+
+        return dto;
+    }
 
     /**
      * Obtener todas las playlists de un usuario
@@ -54,13 +92,13 @@ public class PlaylistController {
                 return ResponseEntity.ok(new ArrayList<>());
             }
 
-            // Convertir ListaEnlazada a List para JSON
-            List<Playlist> playlistList = new ArrayList<>();
+            // Convertir ListaEnlazada a List<DTO> para JSON (evitar serializar estructuras personalizadas)
+            List<Map<String, Object>> playlistDtos = new ArrayList<>();
             for (int i = 0; i < playlists.tamanio(); i++) {
-                playlistList.add(playlists.obtener(i));
+                playlistDtos.add(playlistToDto(playlists.obtener(i)));
             }
 
-            return ResponseEntity.ok(playlistList);
+            return ResponseEntity.ok(playlistDtos);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -81,7 +119,7 @@ public class PlaylistController {
                     .body("Playlist no encontrada");
             }
 
-            return ResponseEntity.ok(playlistOpt.get());
+            return ResponseEntity.ok(playlistToDto(playlistOpt.get()));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -125,7 +163,7 @@ public class PlaylistController {
             creador.getListasDeReproduccion().agregar(playlistGuardada);
             usuarioRepository.save(creador);
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(playlistGuardada);
+            return ResponseEntity.status(HttpStatus.CREATED).body(playlistToDto(playlistGuardada));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -152,7 +190,7 @@ public class PlaylistController {
             playlist.setNombre(nombre);
             Playlist playlistActualizada = playlistRepository.save(playlist);
 
-            return ResponseEntity.ok(playlistActualizada);
+            return ResponseEntity.ok(playlistToDto(playlistActualizada));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -238,7 +276,7 @@ public class PlaylistController {
             playlist.getCanciones().agregar(cancion);
             Playlist playlistActualizada = playlistRepository.save(playlist);
 
-            return ResponseEntity.ok(playlistActualizada);
+            return ResponseEntity.ok(playlistToDto(playlistActualizada));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -323,7 +361,7 @@ public class PlaylistController {
             playlist.getSeguidores().agregar(usuario);
             Playlist playlistActualizada = playlistRepository.save(playlist);
 
-            return ResponseEntity.ok(playlistActualizada);
+            return ResponseEntity.ok(playlistToDto(playlistActualizada));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

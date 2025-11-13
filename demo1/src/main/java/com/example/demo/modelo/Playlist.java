@@ -33,3 +33,4 @@ public class Playlist {
     @JsonIgnore
     private ListaDoblementeEnlazada<Usuario> seguidores;
 }
+
