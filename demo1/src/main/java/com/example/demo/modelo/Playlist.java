@@ -25,6 +25,11 @@ public class Playlist {
 
     private String nombre;
 
+    // descripción opcional
+    private String descripcion;
+
+    // Evitar que Jackson intente serializar la implementación personalizada de ListaEnlazada
+    @JsonIgnore
     private ListaEnlazada<Cancion> canciones;
 
     @DBRef
@@ -32,5 +37,5 @@ public class Playlist {
 
     @JsonIgnore
     private ListaDoblementeEnlazada<Usuario> seguidores;
-}
 
+}

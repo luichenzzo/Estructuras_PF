@@ -42,6 +42,7 @@ public class PlaylistController {
         Map<String, Object> dto = new HashMap<>();
         dto.put("id", p.getId());
         dto.put("nombre", p.getNombre());
+        dto.put("descripcion", p.getDescripcion());
         dto.put("correoCreador", p.getCreador() != null ? p.getCreador().getCorreo() : null);
 
         List<Map<String, Object>> canciones = new ArrayList<>();
@@ -149,19 +150,22 @@ public class PlaylistController {
             // Crear nueva playlist
             Playlist nuevaPlaylist = new Playlist();
             nuevaPlaylist.setNombre(nombre);
-            nuevaPlaylist.setCanciones(new ListaEnlazada<>());
+            nuevaPlaylist.setDescripcion(descripcion);
+            // No inicializamos las colecciones personalizadas antes de guardar porque
+            // Spring Data Mongo puede fallar al mapear tipos personalizados (ListaEnlazada, etc.).
+            // Las dejamos null para que Mongo almacene solo campos serializables.
+            nuevaPlaylist.setCanciones(null);
             nuevaPlaylist.setCreador(creador);
-            nuevaPlaylist.setSeguidores(new ListaDoblementeEnlazada<>());
+            nuevaPlaylist.setSeguidores(null);
 
             // Guardar playlist en la BD
             Playlist playlistGuardada = playlistRepository.save(nuevaPlaylist);
 
             // Agregar playlist a la lista del usuario
-            if (creador.getListasDeReproduccion() == null) {
-                creador.setListasDeReproduccion(new ListaEnlazada<>());
-            }
-            creador.getListasDeReproduccion().agregar(playlistGuardada);
-            usuarioRepository.save(creador);
+            // No persistimos la modificación de la lista de reproduccion del usuario aquí
+            // (evita intentar guardar la estructura personalizada). Si necesitas mantener
+            // la relación en el usuario, es mejor migrar ese campo a un List<String> de IDs
+            // o implementar un convertidor personalizado.
 
             return ResponseEntity.status(HttpStatus.CREATED).body(playlistToDto(playlistGuardada));
         } catch (Exception e) {
