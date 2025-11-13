@@ -383,4 +383,104 @@ public class CancionService {
 
         return valores.toArray(new String[0]);
     }
+
+    /**
+     * Actualiza una canción existente utilizando los nombres del artista y álbum.
+     *
+     * @param id ID de la canción a actualizar
+     * @param cancionDTO Datos actualizados de la canción
+     * @return Canción actualizada
+     * @throws com.example.demo.excepciones.RecursoNoEncontradoException Si no existe la canción
+     */
+    public Cancion actualizarCancion(String id, CancionRegistroPorNombreDTO cancionDTO) {
+        // Validar ID
+        if (id == null || id.trim().isEmpty()) {
+            throw new DatosInvalidosException("El ID de la canción no puede estar vacío");
+        }
+
+        // Buscar la canción existente
+        Optional<Cancion> cancionOpt = cancionRepository.findById(id);
+        if (cancionOpt.isEmpty()) {
+            throw new com.example.demo.excepciones.RecursoNoEncontradoException("No se encontró la canción con ID: " + id);
+        }
+
+        Cancion cancionExistente = cancionOpt.get();
+        Album albumAnterior = cancionExistente.getAlbum();
+
+        // Validar datos
+        if (cancionDTO.getTitulo() == null || cancionDTO.getTitulo().trim().isEmpty()) {
+            throw new DatosInvalidosException("El título de la canción es obligatorio");
+        }
+        if (cancionDTO.getNombreArtista() == null || cancionDTO.getNombreArtista().trim().isEmpty()) {
+            throw new DatosInvalidosException("El nombre del artista es obligatorio");
+        }
+        if (cancionDTO.getTituloAlbum() == null || cancionDTO.getTituloAlbum().trim().isEmpty()) {
+            throw new DatosInvalidosException("El título del álbum es obligatorio");
+        }
+
+        // Buscar el artista por nombre
+        Optional<Artista> artistaOpt = artistaRepository.findByNombre(cancionDTO.getNombreArtista());
+        if (artistaOpt.isEmpty()) {
+            throw new ArtistaNoEncontradoException(cancionDTO.getNombreArtista());
+        }
+
+        Artista artista = artistaOpt.get();
+
+        // Buscar el álbum por título y artista
+        List<Album> albumesDelArtista = albumRepository.findByArtista(artista);
+        Optional<Album> albumOpt = albumesDelArtista.stream()
+                .filter(album -> album.getTitulo().equalsIgnoreCase(cancionDTO.getTituloAlbum()))
+                .findFirst();
+
+        if (albumOpt.isEmpty()) {
+            throw new AlbumNoEncontradoException(cancionDTO.getTituloAlbum(), cancionDTO.getNombreArtista());
+        }
+
+        Album albumNuevo = albumOpt.get();
+
+        // Actualizar los datos de la canción
+        cancionExistente.setTitulo(cancionDTO.getTitulo());
+        cancionExistente.setArtista(artista);
+        cancionExistente.setAlbum(albumNuevo);
+        cancionExistente.setGenero(cancionDTO.getGenero());
+        cancionExistente.setAnio(cancionDTO.getAnio());
+        cancionExistente.setDuracion(cancionDTO.getDuracion());
+        cancionExistente.setURLCancion(cancionDTO.getURLCancion());
+        cancionExistente.setURLPortadaCancion(albumNuevo.getURLPortadaAlbum());
+
+        // Guardar la canción actualizada
+        Cancion cancionActualizada = cancionRepository.save(cancionExistente);
+
+        // Si cambió de álbum, actualizar las listas de canciones
+        if (!albumAnterior.getId().equals(albumNuevo.getId())) {
+            // Remover del álbum anterior
+            albumAnterior.getCanciones().eliminar(cancionExistente);
+            albumRepository.save(albumAnterior);
+
+            // Agregar al nuevo álbum
+            albumNuevo.getCanciones().agregar(cancionActualizada);
+            albumRepository.save(albumNuevo);
+        }
+
+        return cancionActualizada;
+    }
+
+    /**
+     * Elimina una canción por su ID.
+     *
+     * @param id ID de la canción a eliminar
+     * @throws com.example.demo.excepciones.RecursoNoEncontradoException Si no existe la canción
+     */
+    public void eliminarCancion(String id) {
+        if (id == null || id.trim().isEmpty()) {
+            throw new DatosInvalidosException("El ID de la canción no puede estar vacío");
+        }
+
+        Optional<Cancion> cancionOpt = cancionRepository.findById(id);
+        if (cancionOpt.isEmpty()) {
+            throw new com.example.demo.excepciones.RecursoNoEncontradoException("No se encontró la canción con ID: " + id);
+        }
+
+        cancionRepository.deleteById(id);
+    }
 }

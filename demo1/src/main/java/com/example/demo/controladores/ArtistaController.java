@@ -56,4 +56,29 @@ public class ArtistaController {
     public ResponseEntity<List<String>> obtenerNombresArtistas() {
         return artistaService.obtenerNombresArtistas();
     }
+
+    /**
+     * Actualiza un artista existente.
+     *
+     * @param id ID del artista a actualizar
+     * @param artistaDTO Datos actualizados del artista
+     * @return ResponseEntity con el artista actualizado
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<Artista> actualizarArtista(@PathVariable String id, @RequestBody ArtistaRegistroDTO artistaDTO) {
+        Artista artistaActualizado = artistaService.actualizarArtista(id, artistaDTO);
+        return new ResponseEntity<>(artistaActualizado, HttpStatus.OK);
+    }
+
+    /**
+     * Elimina un artista por su ID.
+     *
+     * @param id ID del artista a eliminar
+     * @return ResponseEntity con estado NO_CONTENT si fue exitoso
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarArtista(@PathVariable String id) {
+        artistaService.eliminarArtista(id);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -2,6 +2,7 @@ package com.example.demo.modelo;
 
 import com.example.demo.estructuras.ListaEnlazada;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,6 +32,7 @@ public class Album {
 
     private GENERO genero;
 
+    @JsonProperty("URLPortadaAlbum")
     private String URLPortadaAlbum;
 
     @JsonIgnore

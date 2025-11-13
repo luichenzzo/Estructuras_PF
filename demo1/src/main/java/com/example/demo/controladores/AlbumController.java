@@ -70,4 +70,29 @@ public class AlbumController {
         Album album = albumService.obtenerAlbumPorNombre(nombre.trim()).get();
         return new ResponseEntity<>(album, HttpStatus.OK);
     }
+
+    /**
+     * Actualiza un álbum existente utilizando el nombre del artista.
+     *
+     * @param id ID del álbum a actualizar
+     * @param albumDTO Datos actualizados del álbum
+     * @return ResponseEntity con el álbum actualizado
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<Album> actualizarAlbum(@PathVariable String id, @RequestBody AlbumRegistroPorNombreDTO albumDTO) {
+        Album albumActualizado = albumService.actualizarAlbum(id, albumDTO);
+        return new ResponseEntity<>(albumActualizado, HttpStatus.OK);
+    }
+
+    /**
+     * Elimina un álbum por su ID.
+     *
+     * @param id ID del álbum a eliminar
+     * @return ResponseEntity con estado NO_CONTENT si fue exitoso
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarAlbum(@PathVariable String id) {
+        albumService.eliminarAlbum(id);
+        return ResponseEntity.noContent().build();
+    }
 }

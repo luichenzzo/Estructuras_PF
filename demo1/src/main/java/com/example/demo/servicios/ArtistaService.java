@@ -80,4 +80,68 @@ public class ArtistaService {
 
         return ResponseEntity.ok(nombres);
     }
+
+    /**
+     * Actualiza un artista existente.
+     *
+     * @param id ID del artista a actualizar
+     * @param artistaDTO Datos actualizados del artista
+     * @return Artista actualizado
+     * @throws com.example.demo.excepciones.RecursoNoEncontradoException Si no existe el artista
+     */
+    public Artista actualizarArtista(String id, ArtistaRegistroDTO artistaDTO) {
+        // Validar ID
+        if (id == null || id.trim().isEmpty()) {
+            throw new DatosInvalidosException("El ID del artista no puede estar vacío");
+        }
+
+        // Buscar el artista existente
+        Optional<Artista> artistaOpt = artistaRepository.findById(id);
+        if (artistaOpt.isEmpty()) {
+            throw new com.example.demo.excepciones.RecursoNoEncontradoException("No se encontró el artista con ID: " + id);
+        }
+
+        Artista artistaExistente = artistaOpt.get();
+
+        // Validar datos
+        if (artistaDTO.getNombre() == null || artistaDTO.getNombre().trim().isEmpty()) {
+            throw new DatosInvalidosException("El nombre del artista es obligatorio");
+        }
+
+        // Verificar si el nuevo nombre ya existe (solo si cambió el nombre)
+        if (!artistaExistente.getNombre().equals(artistaDTO.getNombre())) {
+            Optional<Artista> artistaDuplicado = artistaRepository.findByNombre(artistaDTO.getNombre());
+            if (artistaDuplicado.isPresent()) {
+                throw new RecursoDuplicadoException("Ya existe un artista con el nombre: " + artistaDTO.getNombre());
+            }
+        }
+
+        // Actualizar los datos
+        artistaExistente.setNombre(artistaDTO.getNombre());
+        artistaExistente.setNacionalidad(artistaDTO.getNacionalidad());
+        artistaExistente.setGeneroPrincipal(artistaDTO.getGeneroPrincipal());
+        artistaExistente.setGeneroSecundario(artistaDTO.getGeneroSecundario());
+        artistaExistente.setURLFotoArtista(artistaDTO.getURLFotoArtista());
+
+        return artistaRepository.save(artistaExistente);
+    }
+
+    /**
+     * Elimina un artista por su ID.
+     *
+     * @param id ID del artista a eliminar
+     * @throws com.example.demo.excepciones.RecursoNoEncontradoException Si no existe el artista
+     */
+    public void eliminarArtista(String id) {
+        if (id == null || id.trim().isEmpty()) {
+            throw new com.example.demo.excepciones.DatosInvalidosException("El ID del artista no puede estar vacío");
+        }
+
+        Optional<Artista> artistaOpt = artistaRepository.findById(id);
+        if (artistaOpt.isEmpty()) {
+            throw new com.example.demo.excepciones.RecursoNoEncontradoException("No se encontró el artista con ID: " + id);
+        }
+
+        artistaRepository.deleteById(id);
+    }
 }

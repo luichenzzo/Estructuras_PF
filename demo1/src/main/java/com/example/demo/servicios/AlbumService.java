@@ -145,4 +145,86 @@ public class AlbumService {
         }
         return Optional.of(resultados.get(0));
     }
+
+    /**
+     * Actualiza un álbum existente utilizando el nombre del artista.
+     *
+     * @param id ID del álbum a actualizar
+     * @param albumDTO Datos actualizados del álbum
+     * @return Álbum actualizado
+     * @throws com.example.demo.excepciones.RecursoNoEncontradoException Si no existe el álbum
+     */
+    public Album actualizarAlbum(String id, AlbumRegistroPorNombreDTO albumDTO) {
+        // Validar ID
+        if (id == null || id.trim().isEmpty()) {
+            throw new DatosInvalidosException("El ID del álbum no puede estar vacío");
+        }
+
+        // Buscar el álbum existente
+        Optional<Album> albumOpt = albumRepository.findById(id);
+        if (albumOpt.isEmpty()) {
+            throw new com.example.demo.excepciones.RecursoNoEncontradoException("No se encontró el álbum con ID: " + id);
+        }
+
+        Album albumExistente = albumOpt.get();
+        Artista artistaAnterior = albumExistente.getArtista();
+
+        // Validar datos
+        if (albumDTO.getTitulo() == null || albumDTO.getTitulo().trim().isEmpty()) {
+            throw new DatosInvalidosException("El título del álbum es obligatorio");
+        }
+        if (albumDTO.getNombreArtista() == null || albumDTO.getNombreArtista().trim().isEmpty()) {
+            throw new DatosInvalidosException("El nombre del artista es obligatorio");
+        }
+
+        // Buscar el artista por nombre
+        Optional<Artista> artistaOpt = artistaRepository.findByNombre(albumDTO.getNombreArtista());
+        if (artistaOpt.isEmpty()) {
+            throw new ArtistaNoEncontradoException(albumDTO.getNombreArtista());
+        }
+
+        Artista artistaNuevo = artistaOpt.get();
+
+        // Actualizar los datos del álbum
+        albumExistente.setTitulo(albumDTO.getTitulo());
+        albumExistente.setAnio(albumDTO.getAnio());
+        albumExistente.setArtista(artistaNuevo);
+        albumExistente.setGenero(albumDTO.getGenero());
+        albumExistente.setURLPortadaAlbum(albumDTO.getURLPortadaAlbum());
+
+        // Guardar el álbum actualizado
+        Album albumActualizado = albumRepository.save(albumExistente);
+
+        // Si cambió de artista, actualizar las listas
+        if (!artistaAnterior.getId().equals(artistaNuevo.getId())) {
+            // Remover del artista anterior
+            artistaAnterior.getAlbumes().eliminar(albumExistente);
+            artistaRepository.save(artistaAnterior);
+
+            // Agregar al nuevo artista
+            artistaNuevo.getAlbumes().agregar(albumActualizado);
+            artistaRepository.save(artistaNuevo);
+        }
+
+        return albumActualizado;
+    }
+
+    /**
+     * Elimina un álbum por su ID.
+     *
+     * @param id ID del álbum a eliminar
+     * @throws com.example.demo.excepciones.RecursoNoEncontradoException Si no existe el álbum
+     */
+    public void eliminarAlbum(String id) {
+        if (id == null || id.trim().isEmpty()) {
+            throw new DatosInvalidosException("El ID del álbum no puede estar vacío");
+        }
+
+        Optional<Album> albumOpt = albumRepository.findById(id);
+        if (albumOpt.isEmpty()) {
+            throw new com.example.demo.excepciones.RecursoNoEncontradoException("No se encontró el álbum con ID: " + id);
+        }
+
+        albumRepository.deleteById(id);
+    }
 }

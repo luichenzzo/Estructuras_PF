@@ -107,6 +107,15 @@ public class UsuarioService {
     }
 
     /**
+     * Obtiene todos los usuarios registrados en el sistema.
+     *
+     * @return Lista con todos los usuarios
+     */
+    public List<Usuario> obtenerTodosLosUsuarios() {
+        return usuarioRepository.findAll();
+    }
+
+    /**
      * Obtiene un usuario por correo o lanza excepción si no existe.
      *
      * @param correo Correo del usuario
@@ -468,5 +477,68 @@ public class UsuarioService {
         }
 
         return usuario;
+    }
+
+    /**
+     * Actualiza los datos de un usuario existente.
+     *
+     * @param correo Correo actual del usuario
+     * @param nuevoCorreo Nuevo correo (opcional, null para no cambiar)
+     * @param nombre Nuevo nombre (opcional, null para no cambiar)
+     * @param nuevaContrasena Nueva contraseña (opcional, null para no cambiar)
+     * @return Usuario actualizado
+     * @throws DatosInvalidosException Si los datos son inválidos
+     * @throws UsuarioNoEncontradoException Si no existe el usuario
+     * @throws RecursoDuplicadoException Si el nuevo correo ya existe
+     */
+    public Usuario actualizarUsuario(String correo, String nuevoCorreo, String nombre, String nuevaContrasena) {
+        Usuario usuario = getUsuarioByCorreo(correo);
+
+        // Actualizar correo si se proporciona y es diferente
+        if (nuevoCorreo != null && !nuevoCorreo.trim().isEmpty() && !nuevoCorreo.equals(correo)) {
+            // Verificar que el nuevo correo no esté en uso
+            Optional<Usuario> usuarioExistente = usuarioRepository.findByCorreo(nuevoCorreo);
+            if (usuarioExistente.isPresent()) {
+                throw new RecursoDuplicadoException("El correo " + nuevoCorreo + " ya está en uso");
+            }
+            usuario.setCorreo(nuevoCorreo.trim());
+        }
+
+        // Actualizar nombre si se proporciona
+        if (nombre != null && !nombre.trim().isEmpty()) {
+            usuario.setNombre(nombre.trim());
+        }
+
+        // Actualizar contraseña si se proporciona
+        if (nuevaContrasena != null && !nuevaContrasena.trim().isEmpty()) {
+            usuario.setContrasena(nuevaContrasena);
+        }
+
+        return usuarioRepository.save(usuario);
+    }
+
+    /**
+     * Elimina un usuario del sistema.
+     *
+     * @param correo Correo del usuario a eliminar
+     * @throws DatosInvalidosException Si el correo está vacío
+     * @throws UsuarioNoEncontradoException Si no existe el usuario
+     */
+    public void eliminarUsuario(String correo) {
+        Usuario usuario = getUsuarioByCorreo(correo);
+        
+        // Eliminar del grafo social primero
+        if (usuario.getSeguidos() != null) {
+            for (Usuario seguido : usuario.getSeguidos()) {
+                try {
+                    grafoSocialService.desconectarUsuarios(usuario.getId(), seguido.getId());
+                } catch (Exception e) {
+                    // Continuar aunque falle
+                }
+            }
+        }
+        
+        // Eliminar el usuario
+        usuarioRepository.delete(usuario);
     }
 }

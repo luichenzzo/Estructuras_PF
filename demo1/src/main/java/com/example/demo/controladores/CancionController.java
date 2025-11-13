@@ -62,6 +62,19 @@ public class CancionController {
     }
 
     /**
+     * Obtiene una canción específica por su ID.
+     *
+     * @param id ID de la canción
+     * @return ResponseEntity con la canción encontrada
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Cancion> obtenerCancionPorId(@PathVariable String id) {
+        return cancionService.obtenerCancionPorId(id)
+                .map(cancion -> new ResponseEntity<>(cancion, HttpStatus.OK))
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    /**
      * Realiza una búsqueda avanzada de canciones con lógica AND/OR.
      *
      * @param busqueda Criterios de búsqueda con operador lógico (AND/OR)
@@ -85,5 +98,30 @@ public class CancionController {
             @RequestParam("archivo") MultipartFile archivo) {
         CargaMasivaResultadoDTO resultado = cancionService.cargarCancionesDesdeCSV(archivo);
         return new ResponseEntity<>(resultado, HttpStatus.OK);
+    }
+
+    /**
+     * Actualiza una canción existente utilizando los nombres del artista y álbum.
+     *
+     * @param id ID de la canción a actualizar
+     * @param cancionDTO Datos actualizados de la canción
+     * @return ResponseEntity con la canción actualizada
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<Cancion> actualizarCancion(@PathVariable String id, @RequestBody CancionRegistroPorNombreDTO cancionDTO) {
+        Cancion cancionActualizada = cancionService.actualizarCancion(id, cancionDTO);
+        return new ResponseEntity<>(cancionActualizada, HttpStatus.OK);
+    }
+
+    /**
+     * Elimina una canción por su ID.
+     *
+     * @param id ID de la canción a eliminar
+     * @return ResponseEntity con estado NO_CONTENT si fue exitoso
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarCancion(@PathVariable String id) {
+        cancionService.eliminarCancion(id);
+        return ResponseEntity.noContent().build();
     }
 }

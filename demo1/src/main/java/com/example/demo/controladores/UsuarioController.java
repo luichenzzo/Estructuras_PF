@@ -51,6 +51,17 @@ public class UsuarioController {
     }
 
     /**
+     * Obtiene todos los usuarios registrados en el sistema.
+     *
+     * @return ResponseEntity con la lista de todos los usuarios
+     */
+    @GetMapping("/todos")
+    public ResponseEntity<List<Usuario>> obtenerTodosLosUsuarios() {
+        List<Usuario> usuarios = usuarioService.obtenerTodosLosUsuarios();
+        return new ResponseEntity<>(usuarios, HttpStatus.OK);
+    }
+
+    /**
      * Agrega una canción a la lista de favoritos del usuario.
      *
      * @param correoUsuario  Correo del usuario
@@ -125,5 +136,36 @@ public class UsuarioController {
     public ResponseEntity<Usuario> loginUsuario(@RequestParam String correo, @RequestParam String contrasena) {
         Usuario usuario = usuarioService.loginUsuario(correo, contrasena);
         return new ResponseEntity<>(usuario, HttpStatus.OK);
+    }
+
+    /**
+     * Actualiza los datos de un usuario existente.
+     *
+     * @param correo Correo actual del usuario
+     * @param nuevoCorreo Nuevo correo (opcional)
+     * @param nombre Nuevo nombre (opcional)
+     * @param nuevaContrasena Nueva contraseña (opcional)
+     * @return ResponseEntity con el usuario actualizado
+     */
+    @PutMapping
+    public ResponseEntity<Usuario> actualizarUsuario(
+            @RequestParam String correo,
+            @RequestParam(required = false) String nuevoCorreo,
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) String nuevaContrasena) {
+        Usuario usuarioActualizado = usuarioService.actualizarUsuario(correo, nuevoCorreo, nombre, nuevaContrasena);
+        return new ResponseEntity<>(usuarioActualizado, HttpStatus.OK);
+    }
+
+    /**
+     * Elimina un usuario del sistema.
+     *
+     * @param correo Correo del usuario a eliminar
+     * @return ResponseEntity con estado NO_CONTENT si fue exitoso
+     */
+    @DeleteMapping
+    public ResponseEntity<Void> eliminarUsuario(@RequestParam String correo) {
+        usuarioService.eliminarUsuario(correo);
+        return ResponseEntity.noContent().build();
     }
 }

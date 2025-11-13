@@ -1,5 +1,6 @@
 package com.example.demo.modelo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -36,7 +37,9 @@ public class Cancion {
 
     private double duracion;
 
+    @JsonProperty("URLCancion")
     private String URLCancion;
 
+    @JsonProperty("URLPortadaCancion")
     private String URLPortadaCancion;
 }
