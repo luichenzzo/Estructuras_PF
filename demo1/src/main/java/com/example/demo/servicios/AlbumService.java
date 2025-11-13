@@ -2,6 +2,7 @@ package com.example.demo.servicios;
 
 import com.example.demo.dto.AlbumRegistroDTO;
 import com.example.demo.dto.AlbumRegistroPorNombreDTO;
+import com.example.demo.dto.CargaMasivaResultadoDTO;
 import com.example.demo.modelo.Album;
 import com.example.demo.modelo.Artista;
 import com.example.demo.repositorio.AlbumRepository;
@@ -13,7 +14,12 @@ import com.example.demo.excepciones.DatosInvalidosException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -226,5 +232,135 @@ public class AlbumService {
         }
 
         albumRepository.deleteById(id);
+    }
+
+    /**
+     * Carga masiva de álbumes desde un archivo CSV.
+     * Formato esperado: Titulo,Anio,NombreArtista,Genero,URLPortadaAlbum
+     *
+     * @param archivo Archivo CSV con los álbumes
+     * @return Resultado de la carga con estadísticas y errores
+     */
+    public CargaMasivaResultadoDTO cargarAlbumesDesdeCSV(MultipartFile archivo) {
+        CargaMasivaResultadoDTO resultado = new CargaMasivaResultadoDTO();
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(archivo.getInputStream()))) {
+            String linea;
+            int numeroLinea = 0;
+            reader.readLine(); // Saltar header
+
+            while ((linea = reader.readLine()) != null) {
+                numeroLinea++;
+                resultado.setTotalProcesadas(resultado.getTotalProcesadas() + 1);
+
+                try {
+                    String[] campos = parsearLineaCSV(linea);
+
+                    // Validar número de campos
+                    if (campos.length != 5) {
+                        resultado.agregarError(numeroLinea, "Formato inválido. Se esperan 5 campos, se encontraron " + campos.length);
+                        continue;
+                    }
+
+                    // Validar campos vacíos
+                    if (campos[0].trim().isEmpty()) {
+                        resultado.agregarError(numeroLinea, "El título del álbum no puede estar vacío");
+                        continue;
+                    }
+
+                    if (campos[2].trim().isEmpty()) {
+                        resultado.agregarError(numeroLinea, "El nombre del artista no puede estar vacío");
+                        continue;
+                    }
+
+                    // Buscar el artista
+                    String nombreArtista = campos[2].trim();
+                    Optional<Artista> artistaOpt = artistaRepository.findByNombre(nombreArtista);
+                    
+                    if (artistaOpt.isEmpty()) {
+                        resultado.agregarError(numeroLinea, "Artista no encontrado: " + nombreArtista);
+                        continue;
+                    }
+
+                    Artista artista = artistaOpt.get();
+
+                    // Verificar si el álbum ya existe para este artista
+                    String tituloAlbum = campos[0].trim();
+                    Optional<Album> albumExistente = albumRepository.findByTituloAndArtista(tituloAlbum, artista);
+                    if (albumExistente.isPresent()) {
+                        resultado.agregarError(numeroLinea, "Álbum duplicado: " + tituloAlbum + " de " + nombreArtista);
+                        continue;
+                    }
+
+                    // Parsear año
+                    int anio;
+                    try {
+                        anio = Integer.parseInt(campos[1].trim());
+                    } catch (NumberFormatException e) {
+                        resultado.agregarError(numeroLinea, "Año inválido: " + campos[1].trim());
+                        continue;
+                    }
+
+                    // Convertir género a ENUM
+                    com.example.demo.modelo.GENERO genero;
+                    try {
+                        genero = com.example.demo.modelo.GENERO.valueOf(campos[3].trim().toUpperCase());
+                    } catch (IllegalArgumentException e) {
+                        resultado.agregarError(numeroLinea, "Género no válido: " + campos[3].trim());
+                        continue;
+                    }
+
+                    // Crear y guardar álbum
+                    Album album = new Album();
+                    album.setTitulo(tituloAlbum);
+                    album.setAnio(anio);
+                    album.setArtista(artista);
+                    album.setGenero(genero);
+                    album.setURLPortadaAlbum(campos[4].trim());
+                    album.setCanciones(new ListaEnlazada<>());
+
+                    Album albumGuardado = albumRepository.save(album);
+
+                    // Agregar el álbum a la lista del artista
+                    artista.getAlbumes().agregar(albumGuardado);
+                    artistaRepository.save(artista);
+
+                    resultado.setExitosas(resultado.getExitosas() + 1);
+
+                } catch (Exception e) {
+                    resultado.agregarError(numeroLinea, e.getMessage());
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Error al leer el archivo CSV: " + e.getMessage(), e);
+        }
+
+        return resultado;
+    }
+
+    /**
+     * Parsea una línea CSV manejando campos con comillas.
+     *
+     * @param linea Línea CSV a parsear
+     * @return Array de campos
+     */
+    private String[] parsearLineaCSV(String linea) {
+        List<String> campos = new ArrayList<>();
+        StringBuilder campoActual = new StringBuilder();
+        boolean dentroComillas = false;
+
+        for (char c : linea.toCharArray()) {
+            if (c == '"') {
+                dentroComillas = !dentroComillas;
+            } else if (c == ',' && !dentroComillas) {
+                campos.add(campoActual.toString());
+                campoActual = new StringBuilder();
+            } else {
+                campoActual.append(c);
+            }
+        }
+        campos.add(campoActual.toString());
+
+        return campos.toArray(new String[0]);
     }
 }

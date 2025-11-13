@@ -20,5 +20,7 @@ public interface AlbumRepository extends MongoRepository<Album, String> {
 
     List<Album> findByTituloContainingIgnoreCase(String titulo);
 
+    java.util.Optional<Album> findByTituloAndArtista(String titulo, Artista artista);
+
 }
 

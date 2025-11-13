@@ -1,12 +1,14 @@
 package com.example.demo.controladores;
 
 import com.example.demo.dto.ArtistaRegistroDTO;
+import com.example.demo.dto.CargaMasivaResultadoDTO;
 import com.example.demo.modelo.Artista;
 import com.example.demo.servicios.ArtistaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,5 +82,19 @@ public class ArtistaController {
     public ResponseEntity<Void> eliminarArtista(@PathVariable String id) {
         artistaService.eliminarArtista(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Carga masiva de artistas desde un archivo CSV.
+     * Formato esperado: Nombre,Nacionalidad,GeneroPrincipal,GeneroSecundario,URLFotoArtista
+     *
+     * @param archivo Archivo CSV con los artistas
+     * @return ResponseEntity con el resultado de la carga
+     */
+    @PostMapping("/carga-masiva")
+    public ResponseEntity<CargaMasivaResultadoDTO> cargarArtistasDesdeCSV(
+            @RequestParam("archivo") MultipartFile archivo) {
+        CargaMasivaResultadoDTO resultado = artistaService.cargarArtistasDesdeCSV(archivo);
+        return ResponseEntity.ok(resultado);
     }
 }

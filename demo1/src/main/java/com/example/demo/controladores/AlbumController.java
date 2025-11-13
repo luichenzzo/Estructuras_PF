@@ -2,15 +2,16 @@ package com.example.demo.controladores;
 
 import com.example.demo.dto.AlbumRegistroDTO;
 import com.example.demo.dto.AlbumRegistroPorNombreDTO;
+import com.example.demo.dto.CargaMasivaResultadoDTO;
 import com.example.demo.modelo.Album;
 import com.example.demo.servicios.AlbumService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Controlador REST para la gestión de álbumes musicales.
@@ -94,5 +95,19 @@ public class AlbumController {
     public ResponseEntity<Void> eliminarAlbum(@PathVariable String id) {
         albumService.eliminarAlbum(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Carga masiva de álbumes desde un archivo CSV.
+     * Formato esperado: Titulo,Anio,NombreArtista,Genero,URLPortadaAlbum
+     *
+     * @param archivo Archivo CSV con los álbumes
+     * @return ResponseEntity con el resultado de la carga
+     */
+    @PostMapping("/carga-masiva")
+    public ResponseEntity<CargaMasivaResultadoDTO> cargarAlbumesDesdeCSV(
+            @RequestParam("archivo") MultipartFile archivo) {
+        CargaMasivaResultadoDTO resultado = albumService.cargarAlbumesDesdeCSV(archivo);
+        return ResponseEntity.ok(resultado);
     }
 }

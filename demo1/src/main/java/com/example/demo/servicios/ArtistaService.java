@@ -1,6 +1,7 @@
 package com.example.demo.servicios;
 
 import com.example.demo.dto.ArtistaRegistroDTO;
+import com.example.demo.dto.CargaMasivaResultadoDTO;
 import com.example.demo.modelo.Artista;
 import com.example.demo.repositorio.ArtistaRepository;
 import com.example.demo.estructuras.ListaDoblementeEnlazada;
@@ -9,7 +10,11 @@ import com.example.demo.excepciones.RecursoDuplicadoException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -143,5 +148,112 @@ public class ArtistaService {
         }
 
         artistaRepository.deleteById(id);
+    }
+
+    /**
+     * Carga masiva de artistas desde un archivo CSV.
+     * Formato esperado: Nombre,Nacionalidad,GeneroPrincipal,GeneroSecundario,URLFotoArtista
+     *
+     * @param archivo Archivo CSV con los artistas
+     * @return Resultado de la carga con estadísticas y errores
+     */
+    public CargaMasivaResultadoDTO cargarArtistasDesdeCSV(MultipartFile archivo) {
+        CargaMasivaResultadoDTO resultado = new CargaMasivaResultadoDTO();
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(archivo.getInputStream()))) {
+            String linea;
+            int numeroLinea = 0;
+            reader.readLine(); // Saltar header
+
+            while ((linea = reader.readLine()) != null) {
+                numeroLinea++;
+                resultado.setTotalProcesadas(resultado.getTotalProcesadas() + 1);
+
+                try {
+                    String[] campos = parsearLineaCSV(linea);
+
+                    // Validar número de campos
+                    if (campos.length != 5) {
+                        resultado.agregarError(numeroLinea, "Formato inválido. Se esperan 5 campos, se encontraron " + campos.length);
+                        continue;
+                    }
+
+                    // Validar campos vacíos
+                    if (campos[0].trim().isEmpty()) {
+                        resultado.agregarError(numeroLinea, "El nombre del artista no puede estar vacío");
+                        continue;
+                    }
+
+                    // Verificar si el artista ya existe
+                    Optional<Artista> artistaExistente = artistaRepository.findByNombre(campos[0].trim());
+                    if (artistaExistente.isPresent()) {
+                        resultado.agregarError(numeroLinea, "Artista duplicado: " + campos[0].trim());
+                        continue;
+                    }
+
+                    // Crear y guardar artista
+                    Artista artista = new Artista();
+                    artista.setNombre(campos[0].trim());
+                    artista.setNacionalidad(campos[1].trim());
+                    
+                    // Convertir géneros a ENUM
+                    try {
+                        artista.setGeneroPrincipal(com.example.demo.modelo.GENERO.valueOf(campos[2].trim().toUpperCase()));
+                    } catch (IllegalArgumentException e) {
+                        resultado.agregarError(numeroLinea, "Género principal no válido: " + campos[2].trim());
+                        continue;
+                    }
+                    
+                    // GeneroSecundario puede ser vacío
+                    if (!campos[3].trim().isEmpty()) {
+                        try {
+                            artista.setGeneroSecundario(com.example.demo.modelo.GENERO.valueOf(campos[3].trim().toUpperCase()));
+                        } catch (IllegalArgumentException e) {
+                            resultado.agregarError(numeroLinea, "Género secundario no válido: " + campos[3].trim());
+                            continue;
+                        }
+                    }
+                    
+                    artista.setURLFotoArtista(campos[4].trim());
+                    artista.setAlbumes(new ListaDoblementeEnlazada<>());
+
+                    artistaRepository.save(artista);
+                    resultado.setExitosas(resultado.getExitosas() + 1);
+
+                } catch (Exception e) {
+                    resultado.agregarError(numeroLinea, e.getMessage());
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Error al leer el archivo CSV: " + e.getMessage(), e);
+        }
+
+        return resultado;
+    }
+
+    /**
+     * Parsea una línea CSV manejando campos con comillas.
+     *
+     * @param linea Línea CSV a parsear
+     * @return Array de campos
+     */
+    private String[] parsearLineaCSV(String linea) {
+        List<String> campos = new ArrayList<>();
+        StringBuilder campoActual = new StringBuilder();
+        boolean dentroComillas = false;
+
+        for (char c : linea.toCharArray()) {
+            if (c == '"') {
+                dentroComillas = !dentroComillas;
+            } else if (c == ',' && !dentroComillas) {
+                campos.add(campoActual.toString());
+                campoActual = new StringBuilder();
+            } else {
+                campoActual.append(c);
+            }
+        }
+        campos.add(campoActual.toString());
+
+        return campos.toArray(new String[0]);
     }
 }
