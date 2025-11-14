@@ -1,6 +1,6 @@
 package com.example.demo.dto;
 
-import com.example.demo.modelo.GENERO;
+import com.example.demo.model.GENERO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

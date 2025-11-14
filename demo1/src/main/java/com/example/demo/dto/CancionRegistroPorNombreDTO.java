@@ -1,6 +1,6 @@
 package com.example.demo.dto;
 
-import com.example.demo.modelo.GENERO;
+import com.example.demo.model.GENERO;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

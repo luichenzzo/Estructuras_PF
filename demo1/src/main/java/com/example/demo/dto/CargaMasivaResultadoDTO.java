@@ -7,10 +7,6 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * DTO para el resultado de una carga masiva de canciones desde CSV.
- * Contiene estadísticas y detalles de errores si los hay.
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,4 +20,3 @@ public class CargaMasivaResultadoDTO {
         errores.add("Línea " + linea + ": " + mensaje);
     }
 }
-
