@@ -8,6 +8,9 @@ import com.example.demo.repositorio.PlaylistRepository;
 import com.example.demo.repositorio.UsuarioRepository;
 import com.example.demo.estructuras.ListaEnlazada;
 import com.example.demo.estructuras.ListaDoblementeEnlazada;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +27,9 @@ import java.util.HashMap;
  */
 @RestController
 @RequestMapping("/playlists")
-@CrossOrigin(origins = "*")
 public class PlaylistController {
+
+    private static final Logger logger = LoggerFactory.getLogger(PlaylistController.class);
 
     @Autowired
     private PlaylistRepository playlistRepository;
@@ -135,11 +139,23 @@ public class PlaylistController {
     public ResponseEntity<?> createPlaylist(
             @RequestParam String nombre,
             @RequestParam(required = false) String descripcion,
-            @RequestParam String correoCreador) {
+            @RequestParam String correoCreador,
+            HttpServletRequest request) {
         try {
+            // Log request details to help diagnose 500 errors from frontend
+            logger.info("POST /playlists invoked. URL={} query={} remoteAddr={}",
+                    request.getRequestURL(), request.getQueryString(), request.getRemoteAddr());
+            logger.info("createPlaylist params -> nombre='{}', correoCreador='{}', descripcion='{}'",
+                    nombre, correoCreador, descripcion);
+
+            // (optional) log some headers useful for debugging
+            String ua = request.getHeader("User-Agent");
+            if (ua != null) logger.debug("User-Agent: {}", ua);
+
             // Buscar usuario creador
             Optional<Usuario> usuarioOpt = usuarioRepository.findByCorreo(correoCreador);
             if (!usuarioOpt.isPresent()) {
+                logger.warn("Usuario creador no encontrado: {}", correoCreador);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Usuario creador no encontrado");
             }
@@ -165,7 +181,8 @@ public class PlaylistController {
 
             return ResponseEntity.status(HttpStatus.CREATED).body(playlistToDto(playlistGuardada));
         } catch (Exception e) {
-            e.printStackTrace();
+            // Log full exception with stacktrace
+            logger.error("Error al crear playlist (nombre={}, correoCreador={})", nombre, correoCreador, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Error al crear playlist: " + e.getMessage());
         }
@@ -246,14 +263,20 @@ public class PlaylistController {
                     .body("Playlist no encontrada");
             }
 
-            Optional<Cancion> cancionOpt = cancionRepository.findByTitulo(tituloCancion);
-            if (!cancionOpt.isPresent()) {
+            // Buscar canción por título - manejar múltiples resultados
+            List<Cancion> cancionesEncontradas = cancionRepository.findAll().stream()
+                .filter(c -> c.getTitulo().equals(tituloCancion))
+                .collect(java.util.stream.Collectors.toList());
+            
+            if (cancionesEncontradas.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Canción no encontrada");
             }
+            
+            // Tomar la primera canción encontrada
+            Cancion cancion = cancionesEncontradas.get(0);
 
             Playlist playlist = playlistOpt.get();
-            Cancion cancion = cancionOpt.get();
 
             if (playlist.getCanciones() == null) {
                 playlist.setCanciones(new ListaEnlazada<>());

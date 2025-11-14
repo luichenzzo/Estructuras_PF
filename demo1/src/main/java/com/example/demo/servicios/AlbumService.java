@@ -301,8 +301,8 @@ public class AlbumService {
                         continue;
                     }
 
-                    // Convertir género a ENUM
-                    com.example.demo.modelo.GENERO genero;
+                    // Convertir género a ENUM (inicializar para evitar advertencias de compilación)
+                    com.example.demo.modelo.GENERO genero = null;
                     try {
                         genero = com.example.demo.modelo.GENERO.valueOf(campos[3].trim().toUpperCase());
                     } catch (IllegalArgumentException e) {
