@@ -84,28 +84,33 @@ public class PlaylistController {
     @GetMapping("/usuario")
     public ResponseEntity<?> getPlaylistsByUsuario(@RequestParam String correo) {
         try {
+            logger.info("GET /playlists/usuario?correo={}", correo);
+            
             Optional<Usuario> usuarioOpt = usuarioRepository.findByCorreo(correo);
             if (!usuarioOpt.isPresent()) {
+                logger.warn("Usuario no encontrado: {}", correo);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Usuario no encontrado");
             }
 
             Usuario usuario = usuarioOpt.get();
-            ListaEnlazada<Playlist> playlists = usuario.getListasDeReproduccion();
             
-            if (playlists == null) {
-                return ResponseEntity.ok(new ArrayList<>());
-            }
-
-            // Convertir ListaEnlazada a List<DTO> para JSON (evitar serializar estructuras personalizadas)
+            // Buscar todas las playlists donde este usuario es el creador
+            // Esto consulta directamente la colección de playlists en lugar de usar
+            // la ListaEnlazada del usuario (que tiene problemas de serialización)
+            List<Playlist> playlists = playlistRepository.findByCreador(usuario);
+            
+            logger.info("Encontradas {} playlists para el usuario {}", playlists.size(), correo);
+            
+            // Convertir a DTOs para JSON
             List<Map<String, Object>> playlistDtos = new ArrayList<>();
-            for (int i = 0; i < playlists.tamanio(); i++) {
-                playlistDtos.add(playlistToDto(playlists.obtener(i)));
+            for (Playlist p : playlists) {
+                playlistDtos.add(playlistToDto(p));
             }
 
             return ResponseEntity.ok(playlistDtos);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error al obtener playlists del usuario {}", correo, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Error al obtener playlists: " + e.getMessage());
         }
@@ -176,12 +181,9 @@ public class PlaylistController {
 
             // Guardar playlist en la BD
             Playlist playlistGuardada = playlistRepository.save(nuevaPlaylist);
-
-            // Agregar playlist a la lista del usuario
-            // No persistimos la modificación de la lista de reproduccion del usuario aquí
-            // (evita intentar guardar la estructura personalizada). Si necesitas mantener
-            // la relación en el usuario, es mejor migrar ese campo a un List<String> de IDs
-            // o implementar un convertidor personalizado.
+            
+            logger.info("Playlist '{}' creada exitosamente con ID: {} para usuario {}", 
+                    nombre, playlistGuardada.getId(), correoCreador);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(playlistToDto(playlistGuardada));
         } catch (Exception e) {
