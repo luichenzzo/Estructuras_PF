@@ -11,8 +11,8 @@
     <groupId>com.example</groupId>
     <artifactId>EstructurasBackEnd</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>demo1</name>
-    <description>demo1</description>
+    <name>SyncUp</name>
+    <description>SyncUp</description>
     <url/>
     <licenses>
         <license/>
